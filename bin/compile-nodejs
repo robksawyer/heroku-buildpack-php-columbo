@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
-# Source: https://raw.github.com/heroku/heroku-buildpack-nodejs/master/bin/compile
-# Retrieved 2012-11-12 by Jesse Patching <jesse@patching.ca>
+# Retrieved 2012-11-12 from https://raw.github.com/heroku/heroku-buildpack-nodejs/master/bin/compile
+# Modified for use with taeram/heroku-buildpack-php by Jesse Patching <jesse@radpenguin.ca>
 
 # fail fast
 set -e
@@ -172,6 +172,7 @@ export CPPPATH="$INCLUDE_PATH"
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
+run_npm "install -g npm"
 run_npm "install --production"
 run_npm "rebuild"
 echo "Dependencies installed" | indent
