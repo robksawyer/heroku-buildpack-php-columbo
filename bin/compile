@@ -56,9 +56,10 @@ else
 fi
 tar xf $PHP_FILE -C $BUILD_DIR
 
-# Make php available on the command line
+# Make php available to the compiled app and rollout script
 ln -s /app/php/bin/php $BUILD_DIR/bin/php
 ln -s /app/php/bin/composer $BUILD_DIR/bin/composer
+export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_FILE" ] || check_md5 "$ANT_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
@@ -68,8 +69,9 @@ else
 fi
 tar xf $ANT_FILE -C $BUILD_DIR
 
-# Make ant available on the command line
+# Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
+export PATH=$PATH:$BUILD_DIR/ant/bin
 
 popd > /dev/null
 
@@ -86,9 +88,6 @@ fi
 
 # Run the rollout script
 if [ -f rollout.sh ]; then
-    # Make our newly downloaded binaries available
-    export PATH=$PATH:$BUILD_DIR/bin
-
     rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 
