@@ -16,48 +16,127 @@ The config files are bundled with the build pack itself:
 Pre-compiling binaries
 ----------------------
 
-    # Launch an Ubuntu 10.04 EC2 AMI
-    # Preferred AMI: ami-68c01201
+### First time setup
 
-    # Install the development tools
-    sudo su
-    apt-get update
-    apt-get -y install g++ gcc libssl-dev libpng-dev libjpeg-dev libxml2-dev libmysqlclient-dev libpq-dev libpcre3-dev php5-dev php-pear curl libcurl3 libcurl3-dev php5-curl libsasl2-dev
+Run the following commands on your local development machine
+
+    # Install Amazon S3 command line tools
+    sudo apt-get -y install s3cmd
+
+    # If you haven't already, sign up for an Amazon S3 account
+    # Go to your Account page, and click Security Credentials
+    # Grab your Access Key ID and Secret Access Key
+    s3cmd --configure
+        # Enter your Access Key and Secret Key when asked
+        # When asked if you want to Save Settings, answer Yes
+
+    # Create an S3 bucket for your buildpack assets
+    s3cmd mb s3://<bucket_name>
+
+    # Create and launch a build server
+    gem install vulcan
+    vulcan create [NAME]
+
+### Build the packages
+
+Run the following script from your development machine.
+
+    APACHE_VERSION=2.2.22
+    PHP_VERSION=5.3.18
+    S3_BUCKET=<bucket_name>     # Change this to your S3 bucket
+
+    MANIFEST_FILE=manifest.md5sum
+    APACHE_TGZ=apache-${APACHE_VERSION}.tar.gz
+    PHP_TGZ=php-${PHP_VERSION}.tar.gz
+    APP_TGZ=build/vulcan-bundle.tar.gz
+
+    # Prepare for the build
+    rm -Rf build
+    mkdir build
 
     # apache
-    mkdir /app
-    curl http://www.apache.org/dist/httpd/httpd-2.2.22.tar.gz | tar zx
-    cd httpd-2.2.22
-    ./configure --prefix=/app/apache --enable-rewrite --enable-deflate --enable-expires --enable-headers
-    make && make install
-    cd ..
+    cat > build/apache.sh << EOF
+        curl -s -L http://www.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz | tar zx
+        cd httpd-${APACHE_VERSION}
+
+        ./configure --prefix=/app/apache --enable-so --enable-rewrite --enable-deflate --enable-expires --enable-headers && \
+        make && \
+        make install
+
+        echo "$APACHE_VERSION" > VERSION
+    EOF
+    chmod 755 build/apache.sh
 
     # php
-    curl -L http://ca3.php.net/get/php-5.3.18.tar.gz/from/us1.php.net/mirror | tar zx
-    cd php-5.3.18/
-    ./configure --prefix=/app/php --with-apxs2=/app/apache/bin/apxs --with-mysql --with-pdo-mysql --with-pgsql --with-pdo-pgsql --with-iconv --with-gd --with-curl=/usr/lib --with-config-file-path=/app/php --enable-soap=shared --with-openssl
-    make && make install
-    cd ..
+    cat > build/php.sh << EOF
+        curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
+        cd php-${PHP_VERSION}
 
-    # php extensions
-    mkdir /app/php/ext
-    cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
+        ./configure --prefix=/app/php --with-apxs2=/app/apache/bin/apxs  --with-config-file-path=/app/php \
+            --enable-gd-native-ttf \
+            --enable-inline-optimization \
+            --enable-libxml \
+            --enable-mbregex \
+            --enable-mbstring \
+            --enable-pcntl \
+            --enable-soap=shared \
+            --enable-zip \
+            --with-bz2 \
+            --with-curl=/usr/lib \
+            --with-gd \
+            --with-gettext \
+            --with-jpeg-dir \
+            --with-iconv \
+            --with-mhash \
+            --with-mysql \
+            --with-mysqli \
+            --with-openssl \
+            --with-pcre-regex \
+            --with-pdo-mysql \
+            --with-pgsql \
+            --with-pdo-pgsql \
+            --with-png-dir \
+            --with-zlib  && \
+        make && \
+        make install
 
-    # pear
-    apt-get install php5-dev php-pear
-    pear config-set php_dir /app/php
-    pecl install apc
-    mkdir /app/php/include/php/ext/apc
-    cp /usr/lib/php5/20090626/apc.so /app/php/ext/
-    cp /usr/lib/php5/20090626/apc.so /app/php/lib/php/extensions/no-debug-non-zts-20090626/
-    cp /usr/include/php5/ext/apc/apc_serializer.h /app/php/include/php/ext/apc/
+        echo "$PHP_VERSION" > VERSION
 
-    # package
-    cd /app
-    echo '2.2.22' > apache/VERSION
-    tar cvf - apache | gzip -9 - > apache-2.2.22.tar.gz
-    echo '5.3.18' > php/VERSION
-    tar cvf - php | gzip -9 - > php-5.3.18.tar.gz
+        # php extensions
+        mkdir /app/php/ext
+        cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
+
+        # pear
+        /app/php/bin/pear config-set php_dir /app/php
+        echo "no" | /app/php/bin/pecl install apc
+
+        # composer
+        curl -L -s  https://getcomposer.org/installer | /app/php/bin/php
+        mv composer.phar /app/php/bin/composer
+    EOF
+    chmod 755 build/php.sh
+
+    # Since Apache and PHP are dependent on each other and need to be built at the
+    # same time, we'll download the entire /app directory and re-package apache and
+    # php afterwards
+    vulcan build -s build/ -p /app/ -c "./apache.sh && ./php.sh" -o $APP_TGZ
+
+    # Extract the app bundle
+    tar xvf $APP_TGZ -C build/
+
+    # Upload Apache to S3
+    cd build/
+    tar zcf $APACHE_TGZ apache
+    s3cmd put --acl-public $APACHE_TGZ s3://$S3_BUCKET/$APACHE_TGZ
+
+    # Upload PHP to S3
+    tar zcf $PHP_TGZ php
+    s3cmd put --acl-public $PHP_TGZ s3://$S3_BUCKET/$PHP_TGZ
+
+    # Update the manifest file
+    md5sum $APACHE_TGZ > $MANIFEST_FILE
+    md5sum $PHP_TGZ >> $MANIFEST_FILE
+    s3cmd put --acl-public $MANIFEST_FILE s3://$S3_BUCKET/$MANIFEST_FILE
 
 
 Hacking
