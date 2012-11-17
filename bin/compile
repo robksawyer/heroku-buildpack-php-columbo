@@ -7,7 +7,7 @@ set -e
 # config
 APACHE_VERSION="2.2.22"
 APACHE_PATH="apache"
-PHP_VERSION="5.3.10"
+PHP_VERSION="5.3.18"
 PHP_PATH="php"
 
 BIN_DIR=$(dirname $0)
@@ -27,14 +27,14 @@ mv $CACHE_DIR/www .
 
 # keep Procfile
 if [ -f www/Procfile ]; then
-  mv www/Procfile .
+    mv www/Procfile .
 fi
 
-APACHE_URL="https://s3.amazonaws.com/php-lp/apache-$APACHE_VERSION.tar.gz"
+APACHE_URL="https://s3.amazonaws.com/taeram/heroku-buildpack-php/apache-$APACHE_VERSION.tar.gz"
 echo "-----> Bundling Apache version $APACHE_VERSION"
 curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
 
-PHP_URL="https://s3.amazonaws.com/php-lp/php-$PHP_VERSION.tar.gz"
+PHP_URL="https://s3.amazonaws.com/taeram/heroku-buildpack-php/php-$PHP_VERSION.tar.gz"
 echo "-----> Bundling PHP version $PHP_VERSION"
 curl --silent --max-time 60 --location "$PHP_URL" | tar xz
 
@@ -46,10 +46,26 @@ cp $LP_DIR/conf/php.ini php
 mkdir -p bin
 ln -s /app/php/bin/php bin/php
 
+# Check if we need nodejs
+if [ -f package.json ]; then
+    $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
+fi
+
+# Run the rollout script
+if [ -f rollout.sh ]; then
+    rollout.sh "$BUILD_DIR" "$CACHE_DIR"
+fi
+
 cat >>boot.sh <<EOF
 for var in \`env|cut -f1 -d=\`; do
   echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
 done
+
+if [ -f config/apache.conf ]; then
+    echo "-----> Including custom Apache config"
+    echo "Include /app/www/config/apache.conf" >> /app/apache/conf/httpd.conf
+fi
+
 touch /app/apache/logs/error_log
 touch /app/apache/logs/access_log
 tail -F /app/apache/logs/error_log &
