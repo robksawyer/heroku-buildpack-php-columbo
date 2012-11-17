@@ -6,10 +6,12 @@ set -e
 
 # config
 APACHE_VERSION="2.2.22"
+ANT_VERSION="1.8.4"
 PHP_VERSION="5.3.18"
 S3_BUCKET=taeram/heroku-buildpack-php
 APACHE_FILE="apache-${APACHE_VERSION}.tar.gz"
 PHP_FILE="php-${PHP_VERSION}.tar.gz"
+ANT_FILE="ant-${ANT_VERSION}.tar.gz"
 MANIFEST_FILE="manifest.md5sum"
 
 BIN_DIR=$(dirname $0)
@@ -31,7 +33,7 @@ function check_md5() {
 # include .files when moving things around
 shopt -s dotglob
 
-mkdir -p $BUNDLE_DIR
+mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
 
 pushd $BUNDLE_DIR > /dev/null
 
@@ -54,6 +56,21 @@ else
 fi
 tar xf $PHP_FILE -C $BUILD_DIR
 
+# Make php available on the command line
+ln -s /app/php/bin/php $BUILD_DIR/bin/php
+ln -s /app/php/bin/composer $BUILD_DIR/bin/composer
+
+if [ ! -f "$ANT_FILE" ] || check_md5 "$ANT_FILE"; then
+    echo "-----> Bundling Ant version v${ANT_VERSION} "
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$ANT_FILE"  -O
+else
+    echo "-----> Using cached Ant v${ANT_VERSION}"
+fi
+tar xf $ANT_FILE -C $BUILD_DIR
+
+# Make ant available on the command line
+ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
+
 popd > /dev/null
 
 pushd $BUILD_DIR > /dev/null
@@ -69,6 +86,9 @@ fi
 
 # Run the rollout script
 if [ -f rollout.sh ]; then
+    # Make our newly downloaded binaries available
+    export PATH=$PATH:$BUILD_DIR/bin
+
     rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 

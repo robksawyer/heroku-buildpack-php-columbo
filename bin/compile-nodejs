@@ -175,3 +175,9 @@ echo "-----> Installing dependencies with npm"
 run_npm "install --production"
 run_npm "rebuild"
 echo "Dependencies installed" | indent
+
+# Put the node dependencies on the path
+cd node_modules/.bin
+for FILE in `ls -1`; do
+    ln -s /app/node_modules/.bin/$FILE $BUILD_DIR/bin/$FILE
+done

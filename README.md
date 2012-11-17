@@ -1,24 +1,30 @@
 Apache+PHP build pack
 ========================
 
-This is a build pack bundling PHP and Apache for Heroku apps.
+This is a build pack bundling PHP, NodeJS and Apache for Heroku apps.
 
+Apache comes with the following modules installed:
+* deflate
+* expires
+* headers
+* rewrite
+
+Along with PHP, [composer](http://getcomposer.org) and [Apache Ant](http://ant.apache.org/)
+are included.
 
 Configuration
 -------------
 
 The config files are bundled with the build pack itself:
-
 * conf/httpd.conf
 * conf/php.ini
-
 
 Pre-compiling binaries
 ----------------------
 
 ### First time setup
 
-Run the following commands on your local development machine
+On your local development machine:
 
     # Install Amazon S3 command line tools
     sudo apt-get -y install s3cmd
@@ -39,14 +45,16 @@ Run the following commands on your local development machine
 
 ### Build the packages
 
-Run the following script from your development machine.
+On your local development machine:
 
     APACHE_VERSION=2.2.22
+    ANT_VERSION=1.8.4
     PHP_VERSION=5.3.18
     S3_BUCKET=<bucket_name>     # Change this to your S3 bucket
 
     MANIFEST_FILE=manifest.md5sum
     APACHE_TGZ=apache-${APACHE_VERSION}.tar.gz
+    ANT_TGZ=ant-${ANT_VERSION}.tar.gz
     PHP_TGZ=php-${PHP_VERSION}.tar.gz
     APP_TGZ=build/vulcan-bundle.tar.gz
 
@@ -133,17 +141,22 @@ Run the following script from your development machine.
     tar zcf $PHP_TGZ php
     s3cmd put --acl-public $PHP_TGZ s3://$S3_BUCKET/$PHP_TGZ
 
+    # Grab ant and upload to S3
+    curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
+    mv apache-ant-${ANT_VERSION} ant
+    tar zcf $ANT_TGZ ant
+    s3cmd put --acl-public $ANT_TGZ s3://$S3_BUCKET/$ANT_TGZ
+
     # Update the manifest file
     md5sum $APACHE_TGZ > $MANIFEST_FILE
+    md5sum $ANT_TGZ >> $MANIFEST_FILE
     md5sum $PHP_TGZ >> $MANIFEST_FILE
     s3cmd put --acl-public $MANIFEST_FILE s3://$S3_BUCKET/$MANIFEST_FILE
-
 
 Hacking
 -------
 
 To change this buildpack, fork it on Github. Push up changes to your fork, then create a test app with --buildpack <your-github-url> and push to it.
-
 
 Meta
 ----
