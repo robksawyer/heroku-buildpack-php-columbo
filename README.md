@@ -9,7 +9,7 @@ Apache comes with the following modules installed:
 * headers
 * rewrite
 
-Along with PHP, [composer](http://getcomposer.org) and [Apache Ant](http://ant.apache.org/)
+Along with PHP, [Composer](http://getcomposer.org) and [Apache Ant](http://ant.apache.org/)
 are included.
 
 Configuration
