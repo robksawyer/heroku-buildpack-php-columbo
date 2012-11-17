@@ -6,45 +6,61 @@ set -e
 
 # config
 APACHE_VERSION="2.2.22"
-APACHE_PATH="apache"
 PHP_VERSION="5.3.18"
-PHP_PATH="php"
+S3_BUCKET=taeram/heroku-buildpack-php
+APACHE_FILE="apache-${APACHE_VERSION}.tar.gz"
+PHP_FILE="php-${PHP_VERSION}.tar.gz"
+MANIFEST_FILE="manifest.md5sum"
 
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
 CACHE_DIR=$2
+BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
+
+# Compare the md5 of the manifest file with the specified file
+# Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
+# Modified by Jesse Patching <jesse@radpenguin.ca> for use in taeram/heroku-buildpack-php
+function check_md5() {
+    TARGET="$1"
+    REMOTE_MD5SUM=`cat "${BUNDLE_DIR}/${MANIFEST_FILE}" | grep "${TARGET}" | cut -d ' ' -f 1`
+    LOCAL_MD5SUM=`md5sum ${BUNDLE_DIR}/${TARGET} | cut -d ' ' -f 1`
+    ! [ "$REMOTE_MD5SUM" = "$LOCAL_MD5SUM" ]
+}
 
 # include .files when moving things around
 shopt -s dotglob
 
-cd $BUILD_DIR
+mkdir -p $BUNDLE_DIR
 
-# move app things to www
-mkdir -p $CACHE_DIR/www
-mv * $CACHE_DIR/www
-mv $CACHE_DIR/www .
+pushd $BUNDLE_DIR > /dev/null
 
-# keep Procfile
-if [ -f www/Procfile ]; then
-    mv www/Procfile .
+echo "-----> Fetching Manifest"
+curl --silent --max-time 60 -O --location "https://s3.amazonaws.com/$S3_BUCKET/$MANIFEST_FILE"
+
+if [ ! -f "$APACHE_FILE" ] || check_md5 "$APACHE_FILE"; then
+    echo "-----> Bundling Apache v${APACHE_VERSION}"
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_FILE" -O
+else
+    echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
+tar xf $APACHE_FILE -C $BUILD_DIR
 
-APACHE_URL="https://s3.amazonaws.com/taeram/heroku-buildpack-php/apache-$APACHE_VERSION.tar.gz"
-echo "-----> Bundling Apache version $APACHE_VERSION"
-curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
+if [ ! -f "$PHP_FILE" ] || check_md5 "$PHP_FILE"; then
+    echo "-----> Bundling PHP version v${PHP_VERSION}"
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_FILE"  -O
+else
+    echo "-----> Using cached PHP v${PHP_VERSION}"
+fi
+tar xf $PHP_FILE -C $BUILD_DIR
 
-PHP_URL="https://s3.amazonaws.com/taeram/heroku-buildpack-php/php-$PHP_VERSION.tar.gz"
-echo "-----> Bundling PHP version $PHP_VERSION"
-curl --silent --max-time 60 --location "$PHP_URL" | tar xz
+popd > /dev/null
+
+pushd $BUILD_DIR > /dev/null
 
 # update config files
-cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
+cp $LP_DIR/conf/httpd.conf apache/conf
 cp $LP_DIR/conf/php.ini php
-
-# make php available on bin
-mkdir -p bin
-ln -s /app/php/bin/php bin/php
 
 # Check if we need nodejs
 if [ -f package.json ]; then
@@ -56,27 +72,28 @@ if [ -f rollout.sh ]; then
     rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 
-cat >>boot.sh <<EOF
-for var in \`env|cut -f1 -d=\`; do
-  echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
-done
+cat >> boot.sh <<EOF
+    # Make the Heroku environment variables available to Apache and PHP
+    for var in \`env|cut -f1 -d=\`; do
+        echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
+    done
 
-if [ -f config/apache.conf ]; then
-    echo "-----> Including custom Apache config"
-    echo "Include /app/www/config/apache.conf" >> /app/apache/conf/httpd.conf
-fi
+    if [ -f config/apache.conf ]; then
+        echo "-----> Including custom Apache config"
+        echo "Include /app/config/apache.conf" >> /app/apache/conf/httpd.conf
+    fi
 
-touch /app/apache/logs/error_log
-touch /app/apache/logs/access_log
-tail -F /app/apache/logs/error_log &
-tail -F /app/apache/logs/access_log &
-export LD_LIBRARY_PATH=/app/php/ext
-export PHP_INI_SCAN_DIR=/app/www
-echo "Launching apache"
-exec /app/apache/bin/httpd -DNO_DETACH
+    touch /app/apache/logs/error_log
+    touch /app/apache/logs/access_log
+    tail -F /app/apache/logs/error_log &
+    tail -F /app/apache/logs/access_log &
+    export LD_LIBRARY_PATH=/app/php/ext
+    export PHP_INI_SCAN_DIR=/app
+
+    echo "-----> Launching apache"
+    exec /app/apache/bin/httpd -DNO_DETACH
 EOF
 
 chmod +x boot.sh
 
-# clean the cache
-rm -rf $CACHE_DIR/*
+popd > /dev/null
