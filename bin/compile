@@ -84,6 +84,9 @@ cp $LP_DIR/conf/php.ini php
 # Check if we need nodejs
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
+
+    # Make the node binaries available to the rollout script
+    export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
 fi
 
 # Run the rollout script
