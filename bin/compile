@@ -35,6 +35,8 @@ shopt -s dotglob
 
 mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
 
+export PATH=$PATH:$BUILD_DIR/bin
+
 pushd $BUNDLE_DIR > /dev/null
 
 echo "-----> Fetching Manifest"
