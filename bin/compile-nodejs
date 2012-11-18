@@ -185,3 +185,4 @@ done
 
 # Make the node binaries available to the rollout script
 export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
+find $BUILD_DIR/node_modules/.bin/
