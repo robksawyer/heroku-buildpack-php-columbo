@@ -182,3 +182,6 @@ cd node_modules/.bin
 for FILE in `ls -1`; do
     ln -s /app/node_modules/.bin/$FILE $BUILD_DIR/bin/$FILE
 done
+
+# Make the node binaries available to the rollout script
+export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
