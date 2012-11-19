@@ -1,16 +1,16 @@
-Apache+PHP build pack
+PHP build pack
 ========================
 
-This is a build pack bundling PHP, NodeJS and Apache for Heroku apps.
-
-Apache comes with the following modules installed:
-* deflate
-* expires
-* headers
-* rewrite
-
-Along with PHP, [Composer](http://getcomposer.org) and [Apache Ant](http://ant.apache.org/)
-are included.
+This is a Heroku build pack which bundles:
+* [Ant](http://ant.apache.org/)
+* [Apache](http://apache.org), with the following modules:
+ * deflate
+ * expires
+ * headers
+ * rewrite
+* [Composer](http://getcomposer.org)
+* [PHP](http://php.net/)
+* [NPM](https://npmjs.org/)
 
 Configuration
 -------------
