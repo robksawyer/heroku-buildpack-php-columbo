@@ -56,7 +56,7 @@ On your local development machine:
     APACHE_TGZ=apache-${APACHE_VERSION}.tar.gz
     ANT_TGZ=ant-${ANT_VERSION}.tar.gz
     PHP_TGZ=php-${PHP_VERSION}.tar.gz
-    APP_TGZ=build/vulcan-bundle.tar.gz
+    APP_TGZ=app-bundle.tar.gz
 
     # Prepare for the build
     rm -Rf build
