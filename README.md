@@ -27,30 +27,34 @@ Pre-compiling binaries
 ### First time setup
 
 On your local development machine:
+```bash
+# Install Amazon S3 command line tools
+sudo apt-get -y install s3cmd
 
-    # Install Amazon S3 command line tools
-    sudo apt-get -y install s3cmd
+# If you haven't already, sign up for an Amazon S3 account
+# Go to your Account page, and click Security Credentials
+# Grab your Access Key ID and Secret Access Key
+s3cmd --configure
+    # Enter your Access Key and Secret Key when asked
+    # When asked if you want to Save Settings, answer Yes
 
-    # If you haven't already, sign up for an Amazon S3 account
-    # Go to your Account page, and click Security Credentials
-    # Grab your Access Key ID and Secret Access Key
-    s3cmd --configure
-        # Enter your Access Key and Secret Key when asked
-        # When asked if you want to Save Settings, answer Yes
+# Create an S3 bucket for your buildpack assets
+s3cmd mb s3://[bucket_name]
 
-    # Create an S3 bucket for your buildpack assets
-    s3cmd mb s3://<bucket_name>
+# Create and launch a build server
+gem install vulcan
+vulcan create [NAME]
+```
 
-    # Create and launch a build server
-    gem install vulcan
-    vulcan create [NAME]
-
-### Build the packages
+### Build the buildpack
 
 On your local development machine:
-* Create `./support/config.sh`
-* Add your S3 bucket name to `./support/config.sh`:
-    S3_BUCKET=<bucket_name>
+* Create `./support/config.sh` and add your S3 bucket name to it:
+
+```bash
+S3_BUCKET=[bucket_name]
+```
+
 * Run `./support/vulcan.sh`
 
 Hacking
