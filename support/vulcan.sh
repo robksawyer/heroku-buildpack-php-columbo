@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SUPPORT_DIR=`dirname $(readlink -f $0)`
+BUILD_DIR=$SUPPORT_DIR/../build
 CONFIG_FILE=$SUPPORT_DIR/config.sh
 
 if [ ! -e $CONFIG_FILE ]; then
@@ -25,11 +26,11 @@ PHP_TGZ=php-${PHP_VERSION}.tar.gz
 APP_TGZ=app-bundle.tar.gz
 
 # Prepare for the build
-rm -Rf build
-mkdir build
+[ -e $BUILD_DIR ]; rm -Rf $BUILD_DIR
+mkdir $BUILD_DIR
 
 # apache
-cat > build/apache.sh << EOF
+cat > $BUILD_DIR/apache.sh << EOF
     curl -s -L http://www.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz | tar zx
     cd httpd-${APACHE_VERSION}
 
@@ -39,10 +40,10 @@ cat > build/apache.sh << EOF
 
     echo "$APACHE_VERSION" > VERSION
 EOF
-chmod 755 build/apache.sh
+chmod 755 $BUILD_DIR/apache.sh
 
 # php
-cat > build/php.sh << EOF
+cat > $BUILD_DIR/php.sh << EOF
     curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
     cd php-${PHP_VERSION}
 
@@ -88,18 +89,18 @@ cat > build/php.sh << EOF
     curl -L -s  https://getcomposer.org/installer | /app/php/bin/php
     mv composer.phar /app/php/bin/composer
 EOF
-chmod 755 build/php.sh
+chmod 755 $BUILD_DIR/php.sh
 
 # Since Apache and PHP are dependent on each other and need to be built at the
 # same time, we'll download the entire /app directory and re-package apache and
 # php afterwards
-vulcan build -s build/ -p /app/ -c "./apache.sh && ./php.sh" -o $APP_TGZ
+vulcan build -s $BUILD_DIR/ -p /app/ -c "./apache.sh && ./php.sh" -o $APP_TGZ
 
 # Extract the app bundle
-tar xvf $APP_TGZ -C build/
+tar xvf $APP_TGZ -C $BUILD_DIR/
 
 # Upload Apache to S3
-cd build/
+cd $BUILD_DIR/
 tar zcf $APACHE_TGZ apache
 s3cmd put --acl-public $APACHE_TGZ s3://$S3_BUCKET/$APACHE_TGZ
 
