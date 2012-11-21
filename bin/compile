@@ -93,7 +93,7 @@ fi
 
 # Run the rollout script
 if [ -f rollout.sh ]; then
-    rollout.sh "$BUILD_DIR" "$CACHE_DIR"
+    ./rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 
 cat >> boot.sh <<EOF
