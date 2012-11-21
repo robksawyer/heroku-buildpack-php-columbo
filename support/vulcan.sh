@@ -16,6 +16,19 @@ if [ -z "$S3_BUCKET" ]; then
     exit 1;
 fi
 
+if [ -z `which s3cmd` ]; then
+    echo "Cannot find s3cmd, please install it, exiting..."
+    exit 1;
+fi
+
+S3CMD_HAS_ACCESS=`s3cmd ls s3://$S3_BUCKET 2>&1 > /dev/null`
+if [ $? = "1" ]; then
+    echo "s3cmd has not been setup with access to $S3_BUCKET."
+    echo "Please run s3cmd --configure to set it up."
+    echo "Exiting..."
+    exit 1;
+fi
+
 APACHE_VERSION=2.2.22
 ANT_VERSION=1.8.4
 PHP_VERSION=5.3.18
@@ -91,16 +104,19 @@ cat > $BUILD_DIR/php.sh << EOF
 EOF
 chmod 755 $BUILD_DIR/php.sh
 
+# fail fast
+set -e
+
 # Since Apache and PHP are dependent on each other and need to be built at the
 # same time, we'll download the entire /app directory and re-package apache and
 # php afterwards
-vulcan build -s $BUILD_DIR/ -p /app/ -c "./apache.sh && ./php.sh" -o $APP_TGZ
+vulcan build -v -s $BUILD_DIR/ -p /app -c "./apache.sh && ./php.sh" -o $BUILD_DIR/$APP_TGZ
 
 # Extract the app bundle
-tar xvf $APP_TGZ -C $BUILD_DIR/
+cd $BUILD_DIR/
+tar xvf $APP_TGZ
 
 # Upload Apache to S3
-cd $BUILD_DIR/
 tar zcf $APACHE_TGZ apache
 s3cmd put --acl-public $APACHE_TGZ s3://$S3_BUCKET/$APACHE_TGZ
 
