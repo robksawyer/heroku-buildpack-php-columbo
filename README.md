@@ -42,7 +42,7 @@ s3cmd --configure
 s3cmd mb s3://[bucket_name]
 
 # Create and launch a build server
-gem install vulcan
+sudo gem install vulcan
 vulcan create [NAME]
 ```
 
