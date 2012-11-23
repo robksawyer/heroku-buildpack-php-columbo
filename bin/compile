@@ -36,7 +36,6 @@ shopt -s dotglob
 mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
 
 export PATH=$PATH:$BUILD_DIR/bin
-
 pushd $BUNDLE_DIR > /dev/null
 
 echo "-----> Fetching Manifest"
@@ -86,14 +85,16 @@ cp $LP_DIR/conf/php.ini php
 # Check if we need nodejs
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
-
     # Make the node binaries available to the rollout script
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
 fi
 
 # Run the rollout script
 if [ -f rollout.sh ]; then
-    rollout.sh "$BUILD_DIR" "$CACHE_DIR"
+    # Make our newly downloaded binaries available
+    export PATH=$PATH:$BUILD_DIR/bin
+
+    ./rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 
 cat >> boot.sh <<EOF
