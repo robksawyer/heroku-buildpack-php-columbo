@@ -49,7 +49,7 @@ vulcan create [NAME]
 ### Build the buildpack
 
 On your local development machine:
-* Create `./config.sh` and add your S3 bucket name to it:
+* Create `./support/config.sh` and add your S3 bucket name to it:
 
 ```bash
 BUILDPACK_S3_BUCKET=[bucket_name]

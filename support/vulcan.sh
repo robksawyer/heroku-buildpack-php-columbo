@@ -6,7 +6,7 @@ set -e
 SUPPORT_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
 CONF_DIR=$SUPPORT_DIR/../conf/
-CONFIG_FILE=$SUPPORT_DIR/../config.sh
+CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
