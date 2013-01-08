@@ -6,20 +6,20 @@ set -e
 SUPPORT_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
 CONF_DIR=$SUPPORT_DIR/../conf/
-CONFIG_FILE=$SUPPORT_DIR/config.sh
+VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
-if [ ! -e $CONFIG_FILE ]; then
-    echo "Cannot find $CONFIG_FILE, exiting..."
+if [ ! -e $VULCAN_CONFIG_FILE ]; then
+    echo "Cannot find $VULCAN_CONFIG_FILE, exiting..."
     exit 1;
 fi
 
 . $VARIABLES_FILE
-. $CONFIG_FILE
+. $VULCAN_CONFIG_FILE
 
 if [ -z "$BUILDPACK_S3_BUCKET" ]; then
-    echo "\$BUILDPACK_S3_BUCKET variable not found in $CONFIG_FILE, exiting..."
+    echo "\$BUILDPACK_S3_BUCKET variable not found in $VULCAN_CONFIG_FILE, exiting..."
     exit 1;
 fi
 
