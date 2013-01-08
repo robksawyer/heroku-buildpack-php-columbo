@@ -109,7 +109,7 @@ cat >> boot.sh <<EOF
     fi
 
     # Insert the New Relic key (from heroku config) into newrelic.ini
-    sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/newrelic/etc/newrelic.ini
+    sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
     export LD_LIBRARY_PATH=/app/php/ext
     export PHP_INI_SCAN_DIR=/app
