@@ -120,6 +120,8 @@ cat >> boot.sh <<EOF
     # Tail the logs
     touch /app/apache/logs/error_log
     touch /app/apache/logs/access_log
+    touch /app/newrelic/var/logs/php_agent.log
+    touch /app/newrelic/var/logs/newrelic-daemon.log
     (tail -f -n 0 /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
 
     echo "-----> Launching New Relic daemon"
