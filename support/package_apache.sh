@@ -4,9 +4,6 @@ set -e
 SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
-echo $PHP_ZEND_MODULE_API_VERSION;
-exit 1
-
 curl -s -L http://www.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz | tar zx
 cd httpd-${APACHE_VERSION}
 
