@@ -14,8 +14,8 @@ fi
 . $VARIABLES_FILE
 . $CONFIG_FILE
 
-if [ -z "$S3_BUCKET" ]; then
-    echo "\$S3_BUCKET variable not found in $CONFIG_FILE, exiting..."
+if [ -z "$BUILDPACK_S3_BUCKET" ]; then
+    echo "\$BUILDPACK_S3_BUCKET variable not found in $CONFIG_FILE, exiting..."
     exit 1;
 fi
 
@@ -29,9 +29,9 @@ if [ -z `which s3cmd` ]; then
     exit 1;
 fi
 
-S3CMD_HAS_ACCESS=`s3cmd ls s3://$S3_BUCKET 2>&1 > /dev/null`
+S3CMD_HAS_ACCESS=`s3cmd ls s3://$BUILDPACK_S3_BUCKET 2>&1 > /dev/null`
 if [ $? = "1" ]; then
-    echo "s3cmd has not been setup with access to $S3_BUCKET."
+    echo "s3cmd has not been setup with access to $BUILDPACK_S3_BUCKET."
     echo "Please run s3cmd --configure to set it up."
     echo "Exiting..."
     exit 1;
@@ -47,7 +47,7 @@ mkdir $BUILD_DIR
 cat > $BUILD_DIR/apache.sh << EOF
     if [ "$SKIP_APACHE_COMPILE" = "1" ]; then
         echo "-----> Skipping Apache compilation, using v${APACHE_VERSION}"
-        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_TGZ_FILE"  -O
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE"  -O
         tar xf $APACHE_TGZ_FILE -C /app/
         exit 0;
     fi
@@ -67,7 +67,7 @@ chmod 755 $BUILD_DIR/apache.sh
 cat > $BUILD_DIR/php.sh << EOF
     if [ "$SKIP_PHP_COMPILE" = "1" ]; then
         echo "-----> Skipping PHP compilation, using v${PHP_VERSION}"
-        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_TGZ_FILE"  -O
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"  -O
         tar xf $PHP_TGZ_FILE -C /app/
         exit 0;
     fi
@@ -123,7 +123,7 @@ chmod 755 $BUILD_DIR/php.sh
 cp $CONF_DIR/newrelic.ini $BUILD_DIR/newrelic.ini
 cat > $BUILD_DIR/newrelic.sh << EOF
     if [ "$SKIP_NEWRELIC_COMPILE" = "1" ]; then
-        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$NEWRELIC_TGZ_FILE"  -O
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE"  -O
         tar xf $NEWRELIC_TGZ_FILE -C /app/
         exit 0;
     fi
@@ -150,25 +150,25 @@ tar xvf $APP_BUNDLE_TGZ_FILE
 
 # Upload Apache to S3
 tar zcf $APACHE_TGZ_FILE apache
-s3cmd put --acl-public $APACHE_TGZ_FILE s3://$S3_BUCKET/$APACHE_TGZ_FILE
+s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
 
 # Upload PHP to S3
 tar zcf $PHP_TGZ_FILE php
-s3cmd put --acl-public $PHP_TGZ_FILE s3://$S3_BUCKET/$PHP_TGZ_FILE
+s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
 
 # Grab ant and upload to S3
 curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
 mv apache-ant-${ANT_VERSION} ant
 tar zcf $ANT_TGZ_FILE ant
-s3cmd put --acl-public $ANT_TGZ_FILE s3://$S3_BUCKET/$ANT_TGZ_FILE
+s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
 
 # Upload new relic to S3
 tar zcf $NEWRELIC_TGZ_FILE newrelic
-s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$S3_BUCKET/$NEWRELIC_TGZ_FILE
+s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
 
 # Update the manifest file
 md5sum $APACHE_TGZ_FILE > $MANIFEST_FILE
 md5sum $ANT_TGZ_FILE >> $MANIFEST_FILE
 md5sum $PHP_TGZ_FILE >> $MANIFEST_FILE
 md5sum $NEWRELIC_TGZ_FILE >> $MANIFEST_FILE
-s3cmd put --acl-public $MANIFEST_FILE s3://$S3_BUCKET/$MANIFEST_FILE
+s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE

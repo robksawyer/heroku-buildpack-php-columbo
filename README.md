@@ -52,7 +52,7 @@ On your local development machine:
 * Create `./config.sh` and add your S3 bucket name to it:
 
 ```bash
-S3_BUCKET=[bucket_name]
+BUILDPACK_S3_BUCKET=[bucket_name]
 ```
 
 * Run `./support/vulcan.sh`
