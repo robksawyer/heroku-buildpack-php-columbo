@@ -2,6 +2,7 @@
 
 SUPPORT_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
+CONF_DIR=$SUPPORT_DIR/../conf/
 CONFIG_FILE=$SUPPORT_DIR/../config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 
@@ -10,8 +11,8 @@ if [ ! -e $CONFIG_FILE ]; then
     exit 1;
 fi
 
-. $CONFIG_FILE
 . $VARIABLES_FILE
+. $CONFIG_FILE
 
 if [ -z "$S3_BUCKET" ]; then
     echo "\$S3_BUCKET variable not found in $CONFIG_FILE, exiting..."
@@ -44,6 +45,13 @@ mkdir $BUILD_DIR
 
 # apache
 cat > $BUILD_DIR/apache.sh << EOF
+    if [ "$SKIP_APACHE_COMPILE" = "1" ]; then
+        echo "-----> Skipping Apache compilation, using v${APACHE_VERSION}"
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_TGZ_FILE"  -O
+        tar xf $APACHE_TGZ_FILE -C /app/
+        exit 0;
+    fi
+
     curl -s -L http://www.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz | tar zx
     cd httpd-${APACHE_VERSION}
 
@@ -57,6 +65,13 @@ chmod 755 $BUILD_DIR/apache.sh
 
 # php
 cat > $BUILD_DIR/php.sh << EOF
+    if [ "$SKIP_PHP_COMPILE" = "1" ]; then
+        echo "-----> Skipping PHP compilation, using v${PHP_VERSION}"
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_TGZ_FILE"  -O
+        tar xf $PHP_TGZ_FILE -C /app/
+        exit 0;
+    fi
+
     curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
     cd php-${PHP_VERSION}
 
@@ -105,11 +120,20 @@ EOF
 chmod 755 $BUILD_DIR/php.sh
 
 # new relic
+cp $CONF_DIR/newrelic.ini $BUILD_DIR/newrelic.ini
 cat > $BUILD_DIR/newrelic.sh << EOF
+    if [ "$SKIP_NEWRELIC_COMPILE" = "1" ]; then
+        curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$NEWRELIC_TGZ_FILE"  -O
+        tar xf $NEWRELIC_TGZ_FILE -C /app/
+        exit 0;
+    fi
+
     curl -s -L http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz | tar zx
     cd newrelic-php5-${NEWRELIC_VERSION}-linux
 
-    NR_INSTALL_PATH=/app/php/bin NR_INSTALL_KEY="$NEWRELIC_LICENSE_KEY" ./newrelic-install
+    mkdir -p /app/newrelic/bin /app/newrelic/etc /app/newrelic/var/logs /app/newrelic/var/run
+    cp -f ./daemon/newrelic-daemon.x64 /app/newrelic/bin/newrelic-daemon
+    cp -f ../newrelic.ini /app/newrelic/etc/newrelic.ini
 EOF
 chmod 755 $BUILD_DIR/newrelic.sh
 
@@ -117,8 +141,7 @@ chmod 755 $BUILD_DIR/newrelic.sh
 set -e
 
 # Since Apache and PHP are dependent on each other and need to be built at the
-# same time, we'll download the entire /app directory and re-package apache and
-# php afterwards
+# same time, we'll download the entire /app directory and re-package afterwards
 vulcan build -v -s $BUILD_DIR/ -p /app -c "./apache.sh && ./php.sh && ./newrelic.sh" -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
 # Extract the app bundle
@@ -140,8 +163,8 @@ tar zcf $ANT_TGZ_FILE ant
 s3cmd put --acl-public $ANT_TGZ_FILE s3://$S3_BUCKET/$ANT_TGZ_FILE
 
 # Upload new relic to S3
-#tar zcf $NEWRELIC_TGZ_FILE something-goes-here
-#s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$S3_BUCKET/$NEWRELIC_TGZ_FILE
+tar zcf $NEWRELIC_TGZ_FILE newrelic
+s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$S3_BUCKET/$NEWRELIC_TGZ_FILE
 
 # Update the manifest file
 md5sum $APACHE_TGZ_FILE > $MANIFEST_FILE

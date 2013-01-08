@@ -10,8 +10,8 @@ CACHE_DIR=$2
 BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
-. $BIN_DIR/../config.sh
 . $BIN_DIR/../variables.sh
+. $BIN_DIR/../config.sh
 
 # Compare the md5 of the manifest file with the specified file
 # Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
@@ -101,12 +101,19 @@ cat >> boot.sh <<EOF
         echo "Include /app/config/apache.conf" >> /app/apache/conf/httpd.conf
     fi
 
-    touch /app/apache/logs/error_log
-    touch /app/apache/logs/access_log
-    tail -F /app/apache/logs/error_log &
-    tail -F /app/apache/logs/access_log &
+    # Insert the New Relic key (from heroku config) into newrelic.ini
+    sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/newrelic/etc/newrelic.ini
+
     export LD_LIBRARY_PATH=/app/php/ext
     export PHP_INI_SCAN_DIR=/app
+
+    # Tail the logs
+    touch /app/apache/logs/error_log
+    touch /app/apache/logs/access_log
+    (tail -f -n 0 /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
+
+    echo "-----> Launching New Relic daemon"
+    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.ini -d error
 
     echo "-----> Launching apache"
     exec /app/apache/bin/httpd -DNO_DETACH
