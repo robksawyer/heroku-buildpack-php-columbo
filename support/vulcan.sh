@@ -2,7 +2,8 @@
 
 SUPPORT_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
-CONFIG_FILE=$SUPPORT_DIR/config.sh
+CONFIG_FILE=$SUPPORT_DIR/../config.sh
+VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 
 if [ ! -e $CONFIG_FILE ]; then
     echo "Cannot find $CONFIG_FILE, exiting..."
@@ -10,9 +11,15 @@ if [ ! -e $CONFIG_FILE ]; then
 fi
 
 . $CONFIG_FILE
+. $VARIABLES_FILE
 
 if [ -z "$S3_BUCKET" ]; then
-    echo "\$S3_BUCKET variable not found, exiting..."
+    echo "\$S3_BUCKET variable not found in $CONFIG_FILE, exiting..."
+    exit 1;
+fi
+
+if [ -z "$NEWRELIC_LICENSE_KEY" ]; then
+    echo "\$NEWRELIC_LICENSE_KEY variable not found in $CONFIG_FILE, exiting..."
     exit 1;
 fi
 
@@ -29,14 +36,7 @@ if [ $? = "1" ]; then
     exit 1;
 fi
 
-APACHE_VERSION=2.2.22
-ANT_VERSION=1.8.4
-PHP_VERSION=5.3.18
-MANIFEST_FILE=manifest.md5sum
-APACHE_TGZ=apache-${APACHE_VERSION}.tar.gz
-ANT_TGZ=ant-${ANT_VERSION}.tar.gz
-PHP_TGZ=php-${PHP_VERSION}.tar.gz
-APP_TGZ=app-bundle.tar.gz
+APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
 # Prepare for the build
 [ -e $BUILD_DIR ]; rm -Rf $BUILD_DIR
@@ -104,34 +104,48 @@ cat > $BUILD_DIR/php.sh << EOF
 EOF
 chmod 755 $BUILD_DIR/php.sh
 
+# new relic
+cat > $BUILD_DIR/newrelic.sh << EOF
+    curl -s -L http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz | tar zx
+    cd newrelic-php5-${NEWRELIC_VERSION}-linux
+
+    NR_INSTALL_PATH=/app/php/bin NR_INSTALL_KEY="$NEWRELIC_LICENSE_KEY" ./newrelic-install
+EOF
+chmod 755 $BUILD_DIR/newrelic.sh
+
 # fail fast
 set -e
 
 # Since Apache and PHP are dependent on each other and need to be built at the
 # same time, we'll download the entire /app directory and re-package apache and
 # php afterwards
-vulcan build -v -s $BUILD_DIR/ -p /app -c "./apache.sh && ./php.sh" -o $BUILD_DIR/$APP_TGZ
+vulcan build -v -s $BUILD_DIR/ -p /app -c "./apache.sh && ./php.sh && ./newrelic.sh" -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
 # Extract the app bundle
 cd $BUILD_DIR/
-tar xvf $APP_TGZ
+tar xvf $APP_BUNDLE_TGZ_FILE
 
 # Upload Apache to S3
-tar zcf $APACHE_TGZ apache
-s3cmd put --acl-public $APACHE_TGZ s3://$S3_BUCKET/$APACHE_TGZ
+tar zcf $APACHE_TGZ_FILE apache
+s3cmd put --acl-public $APACHE_TGZ_FILE s3://$S3_BUCKET/$APACHE_TGZ_FILE
 
 # Upload PHP to S3
-tar zcf $PHP_TGZ php
-s3cmd put --acl-public $PHP_TGZ s3://$S3_BUCKET/$PHP_TGZ
+tar zcf $PHP_TGZ_FILE php
+s3cmd put --acl-public $PHP_TGZ_FILE s3://$S3_BUCKET/$PHP_TGZ_FILE
 
 # Grab ant and upload to S3
 curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
 mv apache-ant-${ANT_VERSION} ant
-tar zcf $ANT_TGZ ant
-s3cmd put --acl-public $ANT_TGZ s3://$S3_BUCKET/$ANT_TGZ
+tar zcf $ANT_TGZ_FILE ant
+s3cmd put --acl-public $ANT_TGZ_FILE s3://$S3_BUCKET/$ANT_TGZ_FILE
+
+# Upload new relic to S3
+#tar zcf $NEWRELIC_TGZ_FILE something-goes-here
+#s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$S3_BUCKET/$NEWRELIC_TGZ_FILE
 
 # Update the manifest file
-md5sum $APACHE_TGZ > $MANIFEST_FILE
-md5sum $ANT_TGZ >> $MANIFEST_FILE
-md5sum $PHP_TGZ >> $MANIFEST_FILE
+md5sum $APACHE_TGZ_FILE > $MANIFEST_FILE
+md5sum $ANT_TGZ_FILE >> $MANIFEST_FILE
+md5sum $PHP_TGZ_FILE >> $MANIFEST_FILE
+md5sum $NEWRELIC_TGZ_FILE >> $MANIFEST_FILE
 s3cmd put --acl-public $MANIFEST_FILE s3://$S3_BUCKET/$MANIFEST_FILE

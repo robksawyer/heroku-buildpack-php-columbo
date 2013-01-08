@@ -49,9 +49,10 @@ vulcan create [NAME]
 ### Build the buildpack
 
 On your local development machine:
-* Create `./support/config.sh` and add your S3 bucket name to it:
+* Create `./config.sh` and add your S3 bucket name and New Relic license key to it:
 
 ```bash
+NEWRELIC_LICENSE_KEY=[license_key]
 S3_BUCKET=[bucket_name]
 ```
 

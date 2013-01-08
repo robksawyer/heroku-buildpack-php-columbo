@@ -4,21 +4,14 @@
 # fail fast
 set -e
 
-# config
-APACHE_VERSION="2.2.22"
-ANT_VERSION="1.8.4"
-PHP_VERSION="5.3.18"
-S3_BUCKET=taeram/heroku-buildpack-php
-APACHE_FILE="apache-${APACHE_VERSION}.tar.gz"
-PHP_FILE="php-${PHP_VERSION}.tar.gz"
-ANT_FILE="ant-${ANT_VERSION}.tar.gz"
-MANIFEST_FILE="manifest.md5sum"
-
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
 CACHE_DIR=$2
 BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
+
+. $BIN_DIR/../config.sh
+. $BIN_DIR/../variables.sh
 
 # Compare the md5 of the manifest file with the specified file
 # Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
@@ -41,34 +34,34 @@ pushd $BUNDLE_DIR > /dev/null
 echo "-----> Fetching Manifest"
 curl --silent --max-time 60 -O --location "https://s3.amazonaws.com/$S3_BUCKET/$MANIFEST_FILE"
 
-if [ ! -f "$APACHE_FILE" ] || check_md5 "$APACHE_FILE"; then
+if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_FILE" -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_TGZ_FILE" -O
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
-tar xf $APACHE_FILE -C $BUILD_DIR
+tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
-if [ ! -f "$PHP_FILE" ] || check_md5 "$PHP_FILE"; then
+if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_FILE"  -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_TGZ_FILE"  -O
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
-tar xf $PHP_FILE -C $BUILD_DIR
+tar xf $PHP_TGZ_FILE -C $BUILD_DIR
 
 # Make php available to the compiled app and rollout script
 ln -s /app/php/bin/php $BUILD_DIR/bin/php
 ln -s /app/php/bin/composer $BUILD_DIR/bin/composer
 export PATH=$PATH:$BUILD_DIR/php/bin
 
-if [ ! -f "$ANT_FILE" ] || check_md5 "$ANT_FILE"; then
+if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$ANT_FILE"  -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$ANT_TGZ_FILE"  -O
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
-tar xf $ANT_FILE -C $BUILD_DIR
+tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 
 # Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
