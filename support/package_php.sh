@@ -58,7 +58,7 @@ cp $SCRIPT_DIR/conf/apc.ini /app/php/conf.d/apc.ini
 
 # new relic
 cd $SCRIPT_DIR
-curl -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+curl -s -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
 cp -f agent/x64/newrelic-`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so /app/php/ext/
 cp $SCRIPT_DIR/conf/newrelic.ini /app/php/conf.d/newrelic.ini
