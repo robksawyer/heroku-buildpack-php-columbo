@@ -11,9 +11,6 @@ BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 . $BIN_DIR/../variables.sh
-if [ -e $BIN_DIR/../config.sh ]; then
-    . $BIN_DIR/../config.sh
-fi
 
 # Compare the md5 of the manifest file with the specified file
 # Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
@@ -122,10 +119,10 @@ cat >> boot.sh <<EOF
     touch /app/apache/logs/access_log
     touch /app/newrelic/var/logs/php_agent.log
     touch /app/newrelic/var/logs/newrelic-daemon.log
-    (tail -f -n 0 /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
+    (tail -f /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
 
     echo "-----> Launching New Relic daemon"
-    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.ini -d error
+    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.cfg -d error
 
     echo "-----> Launching apache"
     exec /app/apache/bin/httpd -DNO_DETACH
