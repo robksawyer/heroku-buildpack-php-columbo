@@ -69,6 +69,14 @@ tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
 export PATH=$PATH:$BUILD_DIR/ant/bin
 
+if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
+    echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE" -O
+else
+    echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
+fi
+tar xf $NEWRELIC_TGZ_FILE -C $BUILD_DIR
+
 popd > /dev/null
 
 pushd $BUILD_DIR > /dev/null
