@@ -3,7 +3,7 @@ Columbo PHP build pack
 
 This is a Heroku build pack which includes:
 * [Ant](http://ant.apache.org/)
-* [Apache](http://apache.org), with the following modules:
+* [Apache](http://apache.org), including the following modules:
  * deflate
  * expires
  * headers
@@ -12,8 +12,9 @@ This is a Heroku build pack which includes:
 * [New Relic](http://newrelic.com/)
 * [NPM](https://npmjs.org/)
 * [PHP](http://php.net/), including the following notable extensions:
- * APC
+ * apc
  * curl
+ * mcrypt
  * mysql
  * mysqli
  * newrelic
@@ -78,4 +79,5 @@ Meta
 ----
 
 This repo is a fork of [heroku/heroku-buildpack-php](https://github.com/heroku/heroku-buildpack-php),
-and [heroku/heroku-buildpack-nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
+and includes code from [heroku/heroku-buildpack-nodejs](https://github.com/heroku/heroku-buildpack-nodejs)
+and [heroku-buildpack-php-tyler](https://github.com/iphoting/heroku-buildpack-php-tyler).
