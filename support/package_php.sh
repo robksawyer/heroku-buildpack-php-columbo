@@ -71,7 +71,6 @@ cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
 # pear
 /app/php/bin/pear config-set php_dir /app/php
 echo "no" | /app/php/bin/pecl install apc
-cp $SCRIPT_DIR/conf/apc.ini /app/php/conf.d/apc.ini
 
 # new relic
 ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`

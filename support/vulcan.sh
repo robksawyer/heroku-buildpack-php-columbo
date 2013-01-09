@@ -46,7 +46,7 @@ BUILD_IS_VALID=
 while [ $# -gt 0 ]
 do
     case "$1" in
-        apache)
+        apache | php)
             BUILD_IS_VALID=1
             # Apache build includes php for mod_php support
             BUILD_APACHE=1
@@ -55,10 +55,6 @@ do
         ant)
             BUILD_IS_VALID=1
             BUILD_ANT=1
-            ;;
-        php)
-            BUILD_IS_VALID=1
-            BUILD_PHP=1
             ;;
         newrelic)
             BUILD_IS_VALID=1
