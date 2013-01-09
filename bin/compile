@@ -117,8 +117,8 @@ cat >> boot.sh <<EOF
     # Tail the logs
     tail --follow=name --retry --quiet /app/logs/* &
 
-    echo "-----> Launching New Relic daemon"
-    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.cfg -d error
+    #echo "-----> Launching New Relic daemon"
+    #/app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.cfg -d error
 
     echo "-----> Launching apache"
     exec /app/apache/bin/httpd -DNO_DETACH
