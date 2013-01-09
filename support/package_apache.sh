@@ -13,4 +13,9 @@ cd httpd-${APACHE_VERSION}
 make && \
 make install
 
+# Create the empty log files
+mkdir -p /app/logs/
+touch /app/logs/apache-error.log
+touch /app/logs/apache-access.log
+
 echo "$APACHE_VERSION" > VERSION

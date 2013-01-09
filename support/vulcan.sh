@@ -60,7 +60,7 @@ cd $BUILD_DIR/
 tar xvf $APP_BUNDLE_TGZ_FILE
 
 # Upload Apache to S3
-tar zcf $APACHE_TGZ_FILE apache
+tar zcf $APACHE_TGZ_FILE apache logs/apache*
 s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
 
 # Upload PHP to S3
@@ -74,7 +74,7 @@ tar zcf $ANT_TGZ_FILE ant
 s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
 
 # Upload new relic to S3
-tar zcf $NEWRELIC_TGZ_FILE newrelic
+tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
 s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
 
 # Update the manifest file

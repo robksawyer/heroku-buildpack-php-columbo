@@ -115,11 +115,7 @@ cat >> boot.sh <<EOF
     export LD_LIBRARY_PATH=/app/php/ext
 
     # Tail the logs
-    touch /app/apache/logs/error_log
-    touch /app/apache/logs/access_log
-    touch /app/newrelic/var/logs/php_agent.log
-    touch /app/newrelic/var/logs/newrelic-daemon.log
-    (tail -f /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
+    tail -f /app/logs/* &
 
     echo "-----> Launching New Relic daemon"
     /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.cfg -d error
