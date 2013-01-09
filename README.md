@@ -36,7 +36,7 @@ Pre-compiling binaries
 
 ### First time setup
 
-On your local development machine, setup access to your S3 bucket:
+On your local development machine, create an Amazon S3 bucket to hold your buildpack assets:
 ```bash
 # Install Amazon S3 command line tools
 sudo apt-get -y install s3cmd
