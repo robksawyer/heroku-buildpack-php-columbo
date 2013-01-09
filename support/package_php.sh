@@ -81,4 +81,3 @@ cd $SCRIPT_DIR
 curl -s -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
 cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}.so ${PHP_EXTENSION_DIR}/newrelic.so
-cp $SCRIPT_DIR/conf/newrelic.ini /app/php/conf.d/newrelic.ini
