@@ -112,7 +112,7 @@ cat >> boot.sh <<EOF
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
     # PHP shared library path
-    export LD_LIBRARY_PATH=/app/php/ext
+    export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
 
     # Tail the logs
     tail --follow=name --retry --quiet /app/logs/* &

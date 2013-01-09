@@ -37,8 +37,10 @@ if [ $? = "1" ]; then
 fi
 
 # Prepare for the build
-[ -e $BUILD_DIR ]; rm -Rf $BUILD_DIR
-mkdir $BUILD_DIR
+if [ -e $BUILD_DIR ]; then
+    rm -Rf $BUILD_DIR
+fi
+mkdir -p $BUILD_DIR
 
 # Copy the config dir so it's accessible during the build process
 cp -r $CONF_DIR $BUILD_DIR/conf
@@ -73,7 +75,7 @@ tar zcf $APACHE_TGZ_FILE apache logs/apache*
 s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
 
 # Upload PHP to S3
-tar zcf $PHP_TGZ_FILE php
+tar zcf $PHP_TGZ_FILE php local
 s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
 
 # Grab ant and upload to S3
