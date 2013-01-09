@@ -64,7 +64,7 @@ echo "$PHP_VERSION" > VERSION
 curl -L -s  https://getcomposer.org/installer | /app/php/bin/php
 mv composer.phar /app/php/bin/composer
 
-# php extensions
+# php shared libraries
 mkdir /app/php/ext
 cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
 
