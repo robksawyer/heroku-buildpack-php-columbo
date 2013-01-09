@@ -68,7 +68,7 @@ On your local development machine:
 BUILDPACK_S3_BUCKET=[bucket_name]
 ```
 
-* Run `./support/vulcan.sh`
+* Run `./support/vulcan.sh apache ant php newrelic`
 
 Hacking
 -------
