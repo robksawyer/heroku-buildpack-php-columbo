@@ -55,9 +55,17 @@ cp $SUPPORT_DIR/package_newrelic.sh $BUILD_DIR/
 # same time, we'll download the entire /app directory and re-package afterwards
 vulcan build -v -s $BUILD_DIR/ -p /app -c "./package_apache.sh && ./package_php.sh && ./package_newrelic.sh" -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
+echo -n "Did build succeed? (Y/n)"
+read IS_SUCCESSFUL
+if [ "$IS_SUCCESSFUL" = "n" ] || [ "$IS_SUCCESSFUL" = "N" ]; then
+    echo "Exiting..."
+    exit 1;
+fi
+
 # Extract the app bundle
+echo "Extracting app bundle"
 cd $BUILD_DIR/
-tar xvf $APP_BUNDLE_TGZ_FILE
+tar xf $APP_BUNDLE_TGZ_FILE
 
 # Upload Apache to S3
 tar zcf $APACHE_TGZ_FILE apache logs/apache*
