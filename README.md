@@ -1,7 +1,7 @@
-PHP build pack
+Columbo PHP build pack
 ========================
 
-This is a Heroku build pack which bundles:
+This is a Heroku build pack which includes:
 * [Ant](http://ant.apache.org/)
 * [Apache](http://apache.org), with the following modules:
  * deflate
@@ -9,24 +9,34 @@ This is a Heroku build pack which bundles:
  * headers
  * rewrite
 * [Composer](http://getcomposer.org)
-* [PHP](http://php.net/)
+* [New Relic](http://newrelic.com/)
 * [NPM](https://npmjs.org/)
+* [PHP](http://php.net/), including the following notable extensions:
+ * APC
+ * curl
+ * mysql
+ * mysqli
+ * newrelic
+ * pdo
+ * pgsql
+ * phar
+ * soap
+ * zip
 
-This build pack should be used with [taeram/heroku-buildpack-php-template](https://github.com/taeram/heroku-buildpack-php-template).
+This build pack should be used with [taeram/heroku-buildpack-php-columbo-template](https://github.com/taeram/heroku-buildpack-php-columbo-template).
 
 Configuration
 -------------
 
-The config files are bundled with the build pack itself:
-* conf/httpd.conf
-* conf/php.ini
+The Apache, PHP, PHP Extension and New Relic config files are bundled with the
+build pack itself, and can be found in the conf/ directory.
 
 Pre-compiling binaries
 ----------------------
 
 ### First time setup
 
-On your local development machine:
+On your local development machine, setup access to your S3 bucket:
 ```bash
 # Install Amazon S3 command line tools
 sudo apt-get -y install s3cmd
@@ -40,8 +50,10 @@ s3cmd --configure
 
 # Create an S3 bucket for your buildpack assets
 s3cmd mb s3://[bucket_name]
+```
 
-# Create and launch a build server
+Create and launch a build server:
+```
 sudo gem install vulcan
 vulcan create [NAME]
 ```
@@ -65,5 +77,5 @@ To change this buildpack, fork it on Github. Push up changes to your fork, then 
 Meta
 ----
 
-Created by Pedro Belo.
-Many thanks to Keith Rarick for the help with assorted Unix topics :)
+This repo is a fork of [heroku/heroku-buildpack-php](https://github.com/heroku/heroku-buildpack-php),
+and [heroku/heroku-buildpack-nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
