@@ -11,7 +11,7 @@ curl -L "http://downloads.sourceforge.net/project/mcrypt/Libmcrypt/${LIBMCRYPT_V
 cd libmcrypt-$LIBMCRYPT_VERSION
 
 ./configure \
---prefix=/app/php/local \
+--prefix=/app/local \
 --disable-rpath && \
 make install
 
@@ -40,7 +40,7 @@ cd php-${PHP_VERSION}
     --with-gd \
     --with-gettext \
     --with-jpeg-dir \
-    --with-mcrypt=/app/php/local \
+    --with-mcrypt=/app/local \
     --with-iconv \
     --with-mhash \
     --with-mysql \
@@ -67,6 +67,7 @@ mv composer.phar /app/php/bin/composer
 # php shared libraries
 mkdir /app/php/ext
 cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
+cp -L /app/local/libmcrypt.so.4 /app/php/ext/
 
 # pear
 /app/php/bin/pear config-set php_dir /app/php
