@@ -11,7 +11,6 @@ BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 . $BIN_DIR/../variables.sh
-. $BIN_DIR/../config.sh
 
 # Compare the md5 of the manifest file with the specified file
 # Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
@@ -32,11 +31,11 @@ export PATH=$PATH:$BUILD_DIR/bin
 pushd $BUNDLE_DIR > /dev/null
 
 echo "-----> Fetching Manifest"
-curl --silent --max-time 60 -O --location "https://s3.amazonaws.com/$S3_BUCKET/$MANIFEST_FILE"
+curl --silent --max-time 60 -O --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
 
 if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$APACHE_TGZ_FILE" -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE" -O
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
@@ -44,7 +43,7 @@ tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$PHP_TGZ_FILE"  -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"  -O
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
@@ -57,7 +56,7 @@ export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$S3_BUCKET/$ANT_TGZ_FILE"  -O
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"  -O
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
@@ -66,6 +65,14 @@ tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 # Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
 export PATH=$PATH:$BUILD_DIR/ant/bin
+
+if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
+    echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
+    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE" -O
+else
+    echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
+fi
+tar xf $NEWRELIC_TGZ_FILE -C $BUILD_DIR
 
 popd > /dev/null
 
@@ -102,18 +109,16 @@ cat >> boot.sh <<EOF
     fi
 
     # Insert the New Relic key (from heroku config) into newrelic.ini
-    sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/newrelic/etc/newrelic.ini
+    sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
+    # PHP shared library path
     export LD_LIBRARY_PATH=/app/php/ext
-    export PHP_INI_SCAN_DIR=/app
 
     # Tail the logs
-    touch /app/apache/logs/error_log
-    touch /app/apache/logs/access_log
-    (tail -f -n 0 /app/apache/logs/*_log /app/newrelic/var/logs/*.log &)
+    tail -f /app/logs/* &
 
     echo "-----> Launching New Relic daemon"
-    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.ini -d error
+    /app/newrelic/bin/newrelic-daemon -c /app/newrelic/etc/newrelic.cfg -d error
 
     echo "-----> Launching apache"
     exec /app/apache/bin/httpd -DNO_DETACH
