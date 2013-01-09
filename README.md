@@ -12,7 +12,7 @@ This is a Heroku build pack which bundles:
 * [PHP](http://php.net/)
 * [NPM](https://npmjs.org/)
 
-This build pack should be used with [taeram/heroku-buildpack-php-template](https://github.com/taeram/heroku-buildpack-php-template).
+This build pack should be used with [taeram/heroku-buildpack-php-columbo-template](https://github.com/taeram/heroku-buildpack-php-columbo-template).
 
 Configuration
 -------------
