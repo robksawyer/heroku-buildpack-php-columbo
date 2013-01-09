@@ -9,8 +9,11 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
 cd php-${PHP_VERSION}
 
-./configure --prefix=/app/php --with-apxs2=/app/apache/bin/apxs  --with-config-file-path=/app/php \
-    --with-config-file-scan-dir=/app/php/conf.d \
+./configure \
+    --prefix=/app/php \
+    --with-apxs2=/app/apache/bin/apxs  \
+    --with-config-file-path=/app/php \
+    --with-config-file-scan-dir=/app/php/conf.d/ \
     --enable-gd-native-ttf \
     --enable-inline-optimization \
     --enable-libxml \
