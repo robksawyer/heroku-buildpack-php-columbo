@@ -10,6 +10,7 @@ VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
+# include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
     echo "Cannot find $VULCAN_CONFIG_FILE, exiting..."
     exit 1;
@@ -36,6 +37,65 @@ if [ $? = "1" ]; then
     exit 1;
 fi
 
+# What are we building?
+BUILD_APACHE=
+BUILD_ANT=
+BUILD_PHP=
+BUILD_NEWRELIC=
+BUILD_IS_VALID=
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        apache)
+            BUILD_IS_VALID=1
+            # Apache build includes php for mod_php support
+            BUILD_APACHE=1
+            BUILD_PHP=1
+            ;;
+        ant)
+            BUILD_IS_VALID=1
+            BUILD_ANT=1
+            ;;
+        php)
+            BUILD_IS_VALID=1
+            BUILD_PHP=1
+            ;;
+        newrelic)
+            BUILD_IS_VALID=1
+            BUILD_NEWRELIC=1
+            ;;
+    esac
+    shift
+done
+
+if [ -z $BUILD_IS_VALID ]; then
+    echo "No packages specified. Please specify at least one of: apache, ant, php, newrelic"
+    exit 1;
+fi
+
+# Assemble the vulcan command
+BUILD_COMMAND=()
+if [ $BUILD_APACHE ]; then
+   BUILD_COMMAND+=("./package_apache.sh")
+fi
+
+if [ $BUILD_PHP ]; then
+   BUILD_COMMAND+=("./package_php.sh")
+fi
+
+if [ $BUILD_NEWRELIC ]; then
+    BUILD_COMMAND+=("./package_newrelic.sh")
+fi
+
+if [ ! -z $BUILD_COMMAND ]; then
+    if [ "${#BUILD_COMMAND[@]}" = "1" ]; then
+        VULCAN_COMMAND=${BUILD_COMMAND[@]}
+    else
+        VULCAN_COMMAND=$(printf "%s && " "${BUILD_COMMAND[@]}")
+    fi
+fi
+
 # Prepare for the build
 if [ -e $BUILD_DIR ]; then
     rm -Rf $BUILD_DIR
@@ -49,48 +109,67 @@ cp -r $CONF_DIR $BUILD_DIR/conf
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 
 # Copy the package scripts
-cp $SUPPORT_DIR/package_apache.sh $BUILD_DIR/
-cp $SUPPORT_DIR/package_php.sh $BUILD_DIR/
-cp $SUPPORT_DIR/package_newrelic.sh $BUILD_DIR/
+cp $SUPPORT_DIR/package_* $BUILD_DIR/
 
 # Since Apache and PHP are dependent on each other and need to be built at the
 # same time, we'll download the entire /app directory and re-package afterwards
-vulcan build -v -s $BUILD_DIR/ -p /app -c "./package_apache.sh && ./package_php.sh && ./package_newrelic.sh" -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
+if [ ! -z $VULCAN_COMMAND ]; then
+    vulcan build -v -s $BUILD_DIR/ -p /app -c "$VULCAN_COMMAND echo Finished." -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
-echo
-echo
-echo -n "*** Did the build succeed? (Y/n)"
-read IS_SUCCESSFUL
-if [ "$IS_SUCCESSFUL" = "n" ] || [ "$IS_SUCCESSFUL" = "N" ]; then
-    echo "Exiting..."
-    exit 1;
+    echo
+    echo
+    echo -n "*** Did the build succeed? (Y/n)"
+    read IS_SUCCESSFUL
+    if [ "$IS_SUCCESSFUL" = "n" ] || [ "$IS_SUCCESSFUL" = "N" ]; then
+        echo "Exiting..."
+        exit 1;
+    fi
+
+    # Extract the app bundle
+    cd $BUILD_DIR/
+    tar xf $APP_BUNDLE_TGZ_FILE
+
+    # Upload Apache to S3
+    if [ $BUILD_APACHE ]; then
+        tar zcf $APACHE_TGZ_FILE apache logs/apache*
+        s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+    fi
+
+    # Upload PHP to S3
+    if [ $BUILD_PHP ]; then
+        tar zcf $PHP_TGZ_FILE php local
+        s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
+    fi
+
+    # Upload new relic to S3
+    if [ $BUILD_NEWRELIC ]; then
+        tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
+        s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+    fi
 fi
 
-# Extract the app bundle
-cd $BUILD_DIR/
-tar xf $APP_BUNDLE_TGZ_FILE
-
-# Upload Apache to S3
-tar zcf $APACHE_TGZ_FILE apache logs/apache*
-s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
-
-# Upload PHP to S3
-tar zcf $PHP_TGZ_FILE php local
-s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
-
 # Grab ant and upload to S3
-curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
-mv apache-ant-${ANT_VERSION} ant
-tar zcf $ANT_TGZ_FILE ant
-s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+if [ $BUILD_ANT ]; then
+    cd $BUILD_DIR/
 
-# Upload new relic to S3
-tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
-s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+    curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
+    mv apache-ant-${ANT_VERSION} ant
+    tar zcf $ANT_TGZ_FILE ant
+    s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+fi
 
 # Update the manifest file
-md5sum $APACHE_TGZ_FILE > $MANIFEST_FILE
-md5sum $ANT_TGZ_FILE >> $MANIFEST_FILE
-md5sum $PHP_TGZ_FILE >> $MANIFEST_FILE
-md5sum $NEWRELIC_TGZ_FILE >> $MANIFEST_FILE
+cd $BUILD_DIR/
+s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+TGZ_FILES=( $APACHE_TGZ_FILE $ANT_TGZ_FILE $PHP_TGZ_FILE $NEWRELIC_TGZ_FILE )
+for TGZ_FILE in $TGZ_FILES; do
+    if [ -e $TGZ_FILE ]; then
+        # Remove the current md5 from the manifest
+        grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
+        mv manifest.tmp $MANIFEST_FILE
+
+        # Add the new md5
+        md5sum $TGZ_FILE >> $MANIFEST_FILE
+    fi
+done
 s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
