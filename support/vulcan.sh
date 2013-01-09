@@ -55,7 +55,9 @@ cp $SUPPORT_DIR/package_newrelic.sh $BUILD_DIR/
 # same time, we'll download the entire /app directory and re-package afterwards
 vulcan build -v -s $BUILD_DIR/ -p /app -c "./package_apache.sh && ./package_php.sh && ./package_newrelic.sh" -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
-echo -n "Did build succeed? (Y/n)"
+echo
+echo
+echo -n "*** Did the build succeed? (Y/n)"
 read IS_SUCCESSFUL
 if [ "$IS_SUCCESSFUL" = "n" ] || [ "$IS_SUCCESSFUL" = "N" ]; then
     echo "Exiting..."

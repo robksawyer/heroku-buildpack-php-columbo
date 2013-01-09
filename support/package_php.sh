@@ -6,6 +6,17 @@ set -e
 SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
+# mcrypt
+curl -L "http://downloads.sourceforge.net/project/mcrypt/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2?r=&ts=1337060759&use_mirror=nchc" -o - | tar xj
+cd libmcrypt-$LIBMCRYPT_VERSION
+
+./configure \
+--prefix=/app/php/local \
+--disable-rpath && \
+make install
+
+# Build PHP
+cd $SCRIPT_DIR
 curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
 cd php-${PHP_VERSION}
 
@@ -14,6 +25,8 @@ cd php-${PHP_VERSION}
     --with-apxs2=/app/apache/bin/apxs  \
     --with-config-file-path=/app/php \
     --with-config-file-scan-dir=/app/php/conf.d/ \
+    --disable-debug \
+    --disable-rpath \
     --enable-gd-native-ttf \
     --enable-inline-optimization \
     --enable-libxml \
@@ -27,6 +40,7 @@ cd php-${PHP_VERSION}
     --with-gd \
     --with-gettext \
     --with-jpeg-dir \
+    --with-mcrypt=/app/php/local \
     --with-iconv \
     --with-mhash \
     --with-mysql \
