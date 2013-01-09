@@ -11,7 +11,7 @@ curl -L "http://downloads.sourceforge.net/project/mcrypt/Libmcrypt/${LIBMCRYPT_V
 cd libmcrypt-$LIBMCRYPT_VERSION
 
 ./configure \
---prefix=/app/local \
+--prefix=/app/php/local \
 --disable-rpath && \
 make install
 
@@ -40,7 +40,7 @@ cd php-${PHP_VERSION}
     --with-gd \
     --with-gettext \
     --with-jpeg-dir \
-    --with-mcrypt=/app/local \
+    --with-mcrypt=/app/php/local \
     --with-iconv \
     --with-mhash \
     --with-mysql \

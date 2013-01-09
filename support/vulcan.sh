@@ -5,7 +5,6 @@ set -e
 
 SUPPORT_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
-CONF_DIR=$SUPPORT_DIR/../conf/
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
@@ -102,18 +101,13 @@ if [ -e $BUILD_DIR ]; then
 fi
 mkdir -p $BUILD_DIR
 
-# Copy the config dir so it's accessible during the build process
-cp -r $CONF_DIR $BUILD_DIR/conf
-
-# Copy the variables
+# Copy the variables file
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 
 # Copy the package scripts
 cp $SUPPORT_DIR/package_* $BUILD_DIR/
 
-# Since Apache and PHP are dependent on each other and need to be built at the
-# same time, we'll download the entire /app directory and re-package afterwards
-if [ ! -z $VULCAN_COMMAND ]; then
+if [ ! -z "$VULCAN_COMMAND" ]; then
     vulcan build -v -s $BUILD_DIR/ -p /app -c "$VULCAN_COMMAND echo Finished." -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
     echo
@@ -137,7 +131,7 @@ if [ ! -z $VULCAN_COMMAND ]; then
 
     # Upload PHP to S3
     if [ $BUILD_PHP ]; then
-        tar zcf $PHP_TGZ_FILE php local
+        tar zcf $PHP_TGZ_FILE php
         s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
     fi
 

@@ -85,7 +85,7 @@ cp $LP_DIR/conf/apc.ini php/conf.d/
 cp $LP_DIR/conf/newrelic.ini php/conf.d/
 
 # PHP shared library path (just for the compile step)
-export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/local/lib
+export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib
 
 # Check if we need nodejs
 if [ -f package.json ]; then
@@ -117,7 +117,7 @@ cat >> boot.sh <<EOF
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
     # PHP shared library path (for the application)
-    export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
+    export LD_LIBRARY_PATH=/app/php/ext:/app/php/local/lib
 
     # Tail the logs
     tail --follow=name --retry --quiet /app/logs/* &
