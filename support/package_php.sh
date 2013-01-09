@@ -60,7 +60,7 @@ echo "no" | /app/php/bin/pecl install apc
 cp $SCRIPT_DIR/conf/apc.ini /app/php/conf.d/apc.ini
 
 # new relic
-ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d | cut -f 2 -d ':'`
+ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`
 PHP_EXTENSION_DIR=`/app/php/bin/php-config --extension-dir`
 
 cd $SCRIPT_DIR
