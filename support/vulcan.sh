@@ -63,7 +63,6 @@ if [ "$IS_SUCCESSFUL" = "n" ] || [ "$IS_SUCCESSFUL" = "N" ]; then
 fi
 
 # Extract the app bundle
-echo "Extracting app bundle"
 cd $BUILD_DIR/
 tar xf $APP_BUNDLE_TGZ_FILE
 
