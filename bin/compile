@@ -82,6 +82,9 @@ pushd $BUILD_DIR > /dev/null
 cp $LP_DIR/conf/httpd.conf apache/conf
 cp $LP_DIR/conf/php.ini php
 
+# PHP shared library path
+export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
+
 # Check if we need nodejs
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
@@ -112,7 +115,7 @@ cat >> boot.sh <<EOF
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
     # PHP shared library path
-    export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
     # Tail the logs
     tail --follow=name --retry --quiet /app/logs/* &
