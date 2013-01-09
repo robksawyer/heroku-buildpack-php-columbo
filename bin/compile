@@ -80,10 +80,12 @@ pushd $BUILD_DIR > /dev/null
 
 # update config files
 cp $LP_DIR/conf/httpd.conf apache/conf
-cp $LP_DIR/conf/php.ini php
+cp $LP_DIR/conf/php.ini php/
+cp $LP_DIR/conf/apc.ini php/conf.d/
+cp $LP_DIR/conf/newrelic.ini php/conf.d/
 
-# PHP shared library path
-export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
+# PHP shared library path (just for the compile step)
+export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/local/lib
 
 # Check if we need nodejs
 if [ -f package.json ]; then
@@ -114,8 +116,8 @@ cat >> boot.sh <<EOF
     # Insert the New Relic key (from heroku config) into newrelic.ini
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
-    # PHP shared library path
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+    # PHP shared library path (for the application)
+    export LD_LIBRARY_PATH=/app/php/ext:/app/local/lib
 
     # Tail the logs
     tail --follow=name --retry --quiet /app/logs/* &
