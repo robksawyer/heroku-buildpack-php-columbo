@@ -142,8 +142,14 @@ fi
 if [ $BUILD_ANT ]; then
     cd $BUILD_DIR/
 
+    # Download ant
     curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
     mv apache-ant-${ANT_VERSION} ant
+
+    # Download ant-contrib
+    curl -L -s http://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.tar.gz/download | tar zx
+    mv ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar ant/ant-contrib.jar
+
     tar zcf $ANT_TGZ_FILE ant
     s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
 fi
