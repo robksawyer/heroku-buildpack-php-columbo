@@ -7,6 +7,7 @@ This is a Heroku build pack which includes:
  * deflate
  * expires
  * headers
+ * macro
  * rewrite
 * [Composer](http://getcomposer.org)
 * [New Relic](http://newrelic.com/)
