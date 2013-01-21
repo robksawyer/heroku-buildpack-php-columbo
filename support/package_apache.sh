@@ -13,6 +13,11 @@ cd httpd-${APACHE_VERSION}
 make && \
 make install
 
+# Install mod macro
+curl -s -L http://people.apache.org/~fabien/mod_macro/mod_macro-1.1.11.tar.gz | tar zx
+cd mod_macro-1.1.11
+/app/apache/bin/apxs -cia ./mod_macro.c
+
 # Create the empty log files
 mkdir -p /app/logs/
 touch /app/logs/apache-error.log
