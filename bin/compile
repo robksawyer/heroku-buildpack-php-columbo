@@ -79,10 +79,9 @@ popd > /dev/null
 pushd $BUILD_DIR > /dev/null
 
 # update config files
-cp $LP_DIR/conf/httpd.conf apache/conf
-cp $LP_DIR/conf/php.ini php/
-cp $LP_DIR/conf/apc.ini php/conf.d/
-cp $LP_DIR/conf/newrelic.ini php/conf.d/
+cp $LP_DIR/conf/apache/httpd.conf apache/conf
+cp $LP_DIR/conf/php/php.ini php/php.ini
+cp $LP_DIR/conf/php/conf.d/* php/conf.d/
 
 # PHP shared library path (just for the compile step)
 export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib

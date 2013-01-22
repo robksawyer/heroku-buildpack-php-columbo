@@ -7,9 +7,9 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
 # mcrypt
-curl -L "http://downloads.sourceforge.net/project/mcrypt/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2?r=&ts=1337060759&use_mirror=nchc" -o - | tar xj
-cd libmcrypt-$LIBMCRYPT_VERSION
+curl -s -L "http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download" -o - | tar xj
 
+cd libmcrypt-$LIBMCRYPT_VERSION
 ./configure \
 --prefix=/app/php/local \
 --disable-rpath && \
@@ -68,9 +68,12 @@ mv composer.phar /app/php/bin/composer
 mkdir /app/php/ext
 cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
 
-# pear
+# apc
 /app/php/bin/pear config-set php_dir /app/php
 echo "no" | /app/php/bin/pecl install apc
+
+# memcache
+yes '' | /app/php/bin/pecl install memcache
 
 # new relic
 ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`

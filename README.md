@@ -16,6 +16,7 @@ This is a Heroku build pack which includes:
  * apc
  * curl
  * mcrypt
+ * memcache
  * mysql
  * mysqli
  * newrelic
