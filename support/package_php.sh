@@ -15,11 +15,6 @@ cd libmcrypt-$LIBMCRYPT_VERSION
 --disable-rpath && \
 make install
 
-# libmemcached
-cd $SCRIPT_DIR
-mkdir -p /app/php/local/include
-curl --insecure -s -L "https://launchpad.net/libmemcached/1.0/${LIBMEMCACHED_VERSION}/+download/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz --strip-components=1 -C /app/php/local/include
-
 # Build PHP
 cd $SCRIPT_DIR
 curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
@@ -79,17 +74,6 @@ echo "no" | /app/php/bin/pecl install apc
 
 # memcache
 yes '' | /app/php/bin/pecl install memcache
-
-# memcached
-cd $SCRIPT_DIR
-curl -s -L http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
-cd memcached-${MEMCACHED_VERSION}
-sed -i -e '18 s/no, no/yes, yes/' ./config.m4   # Enable memcached json serializer support: YES
-sed -i -e '21 s/no, no/yes, yes/' ./config.m4   # Disable memcached sasl support: YES
-/app/php/bin/phpize && \
-./configure --with-libmemcached-dir=/app/php/local --with-php-config=/app/php/bin/php-config && \
-make && \
-make install
 
 # new relic
 ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`
