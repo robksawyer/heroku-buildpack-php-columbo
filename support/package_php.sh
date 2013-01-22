@@ -7,7 +7,7 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
 # mcrypt
-curl -L "http://downloads.sourceforge.net/project/mcrypt/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2?r=&ts=1337060759&use_mirror=nchc" -o - | tar xj
+curl -s -L "http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download" -o - | tar xj
 cd libmcrypt-$LIBMCRYPT_VERSION
 
 ./configure \
