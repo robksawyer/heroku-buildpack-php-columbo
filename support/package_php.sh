@@ -8,8 +8,8 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 
 # mcrypt
 curl -s -L "http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download" -o - | tar xj
-cd libmcrypt-$LIBMCRYPT_VERSION
 
+cd libmcrypt-$LIBMCRYPT_VERSION
 ./configure \
 --prefix=/app/php/local \
 --disable-rpath && \
@@ -79,6 +79,7 @@ echo "no" | /app/php/bin/pecl install apc
 yes '' | /app/php/bin/pecl install memcache
 
 # memcached
+cd $SCRIPT_DIR
 curl -s -L http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
 cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4   # Enable memcached json serializer support: YES
@@ -87,7 +88,6 @@ sed -i -e '21 s/no, no/yes, yes/' ./config.m4   # Disable memcached sasl support
 ./configure --with-libmemcached-dir=/app/php/local --with-php-config=/app/php/bin/php-config && \
 make && \
 make install
-cd ../
 
 # new relic
 ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`
