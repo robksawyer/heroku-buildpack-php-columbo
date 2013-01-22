@@ -16,7 +16,9 @@ cd libmcrypt-$LIBMCRYPT_VERSION
 make install
 
 # libmemcached
-curl -s -L "https://launchpad.net/libmemcached/1.0/${LIBMEMCACHED_VERSION}/+download/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz -C /app/php/local
+cd $SCRIPT_DIR
+mkdir -p /app/php/local/include
+curl --insecure -s -L "https://launchpad.net/libmemcached/1.0/${LIBMEMCACHED_VERSION}/+download/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz --strip-components=1 -C /app/php/local/include
 
 # Build PHP
 cd $SCRIPT_DIR
