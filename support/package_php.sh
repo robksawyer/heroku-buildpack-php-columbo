@@ -76,14 +76,14 @@ cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
 echo "no" | /app/php/bin/pecl install apc
 
 # memcache
-yes '' | pecl install memcache
+yes '' | /app/php/bin/pecl install memcache
 
 # memcached
-curl -L http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
+curl -s -L http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
 cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4   # Enable memcached json serializer support: YES
 sed -i -e '21 s/no, no/yes, yes/' ./config.m4   # Disable memcached sasl support: YES
-phpize && \
+/app/php/bin/phpize && \
 ./configure --with-libmemcached-dir=/app/php/local --with-php-config=/app/php/bin/php-config && \
 make && \
 make install
