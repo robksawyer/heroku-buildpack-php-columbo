@@ -98,7 +98,6 @@ if [ -f rollout.sh ]; then
     # Make our newly downloaded binaries available
     export PATH=$PATH:$BUILD_DIR/bin
 
-    tail --follow=name --retry --quiet /app/logs/* &
     ./rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
 
