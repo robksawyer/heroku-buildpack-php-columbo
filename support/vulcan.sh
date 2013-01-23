@@ -48,7 +48,7 @@ do
     case "$1" in
         apache | php)
             BUILD_IS_VALID=1
-            # Apache build includes php for mod_php support
+            # Apache build includes php in order to get mod php
             BUILD_APACHE=1
             BUILD_PHP=1
             ;;

@@ -22,7 +22,7 @@ cd php-${PHP_VERSION}
 
 ./configure \
     --prefix=/app/php \
-    --with-apxs2=/app/apache/bin/apxs  \
+    --with-apxs2=/app/apache/bin/apxs \
     --with-config-file-path=/app/php \
     --with-config-file-scan-dir=/app/php/conf.d/ \
     --disable-debug \
@@ -86,7 +86,7 @@ cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4 # Enable memcached json serializer support: YES
 sed -i -e '21 s/no, no/yes, yes/' ./config.m4 # Disable memcached sasl support: YES
 /app/php/bin/phpize && \
-./configure --with-libmemcached-dir=/app/php/local/ --prefix=/app/php --with-php-config=/app/php/bin/php-config
+./configure --with-libmemcached-dir=/app/php/local/ --prefix=/app/php --with-php-config=/app/php/bin/php-config && \
 make && \
 make install
 
