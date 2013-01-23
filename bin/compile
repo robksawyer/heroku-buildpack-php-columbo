@@ -86,6 +86,9 @@ cp $LP_DIR/conf/php/conf.d/* php/conf.d/
 # PHP shared library path (just for the compile step)
 export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib
 
+# Create the logs directory
+mkdir -p $BUILD_DIR/logs
+
 # Check if we need nodejs
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
