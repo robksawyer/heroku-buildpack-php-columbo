@@ -15,7 +15,7 @@ cd libmcrypt-$LIBMCRYPT_VERSION
 --disable-rpath && \
 make install
 
-# Build PHP
+# php
 cd $SCRIPT_DIR
 curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
 cd php-${PHP_VERSION}
