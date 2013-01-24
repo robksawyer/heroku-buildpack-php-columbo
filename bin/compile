@@ -4,7 +4,7 @@
 # fail fast
 set -e
 
-BIN_DIR=$(dirname $0)
+BIN_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$1
 CACHE_DIR=$2
 if [ "$APPLICATION_ENV" = "local" ]; then
@@ -34,21 +34,27 @@ function indent() {
 # include .files when moving things around
 shopt -s dotglob
 
+pushd $BUILD_DIR > /dev/null
 if [ "$APPLICATION_ENV" = "local" ]; then
     # If in local env, just symlink the repo to here
     ln -s "$LOCAL_REPO_DIR" ./www
 else
     # Move all app code to www
-    cd $BUILD_DIR
     mkdir -p $CACHE_DIR/www
     mv * $CACHE_DIR/www
     mv $CACHE_DIR/www .
-
-    # keep the Procfile
-    if [ -f www/Procfile ]; then
-      mv www/Procfile .
-    fi
 fi
+
+# keep the Procfile
+if [ -f www/Procfile ]; then
+  cp www/Procfile .
+fi
+
+# keep the package.json
+if [ -f www/package.json ]; then
+  cp www/package.json .
+fi
+popd > /dev/null
 
 # Download the bundles
 mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
@@ -120,33 +126,32 @@ export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib
 mkdir -p $BUILD_DIR/logs
 
 # Check if we need nodejs
-pushd $BUILD_DIR/www > /dev/null
+pushd $BUILD_DIR > /dev/null
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
+
     # Make the node binaries available to the rollout script
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
 fi
 popd > /dev/null
 
-# Run the rollout script, unless we're in a local env
-pushd $BUILD_DIR/www > /dev/null
-if [ -f rollout.sh ] && [ "$APPLICATION_ENV" != "local" ]; then
-    # Make our newly downloaded binaries available
-    export PATH=$PATH:$BUILD_DIR/bin
-
-    ./rollout.sh "$BUILD_DIR" "$CACHE_DIR"
+# Run the rollout script
+pushd $BUILD_DIR > /dev/null
+if [ -f www/rollout.sh ]; then
+    ./www/rollout.sh "$BUILD_DIR" "$CACHE_DIR" "$APPLICATION_ENV"
 fi
 popd > /dev/null
 
 cat >> boot.sh <<EOF
     # Make the Heroku environment variables available to Apache and PHP
+    echo "-----> Including env variables in Apache"
     for var in \`env|cut -f1 -d=\`; do
-        echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
+        echo "PassEnv \$var" >> /app/apache/conf.d/envvars.conf;
     done
 
-    if [ -f config/apache.conf ]; then
+    if [ -f www/config/apache.conf ]; then
         echo "-----> Including custom Apache config"
-        echo "Include /app/config/apache.conf" >> /app/apache/conf/httpd.conf
+        ln -s /app/www/config/apache.conf /app/apache/conf.d/app.conf
     fi
 
     # Insert the New Relic key (from heroku config) into newrelic.ini
@@ -155,13 +160,33 @@ cat >> boot.sh <<EOF
     # PHP shared library path (for the application)
     export LD_LIBRARY_PATH=/app/php/ext:/app/php/local/lib
 
-    # Tail the logs
-    tail --follow=name --retry --quiet /app/logs/* &
-
     echo "-----> Launching apache"
-    exec /app/apache/bin/httpd -DNO_DETACH
+    if [ "\$APPLICATION_ENV" = "local" ]; then
+        # Change who apache runs as
+        echo "User $USER" > /app/apache/conf.d/user.conf
+        echo "Group $USER" >> /app/apache/conf.d/user.conf
+
+        sudo -E LD_LIBRARY_PATH=\$LD_LIBRARY_PATH /app/apache/bin/httpd
+    else
+        # Tail the logs
+        tail --follow=name --retry --quiet /app/logs/* &
+
+        exec /app/apache/bin/httpd -DNO_DETACH
+    fi
 EOF
 
 chmod +x boot.sh
+
+if [ "$APPLICATION_ENV" = "local" ]; then
+    cat >> restart.sh <<EOF
+        # PHP shared library path (for the application)
+        export LD_LIBRARY_PATH=/app/php/ext:/app/php/local/lib
+
+        sudo killall httpd
+        sleep 1
+        sudo -E LD_LIBRARY_PATH=\$LD_LIBRARY_PATH /app/apache/bin/httpd
+EOF
+    chmod +x restart.sh
+fi
 
 popd > /dev/null

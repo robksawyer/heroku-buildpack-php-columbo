@@ -15,6 +15,9 @@ cd httpd-${APACHE_VERSION}
 make && \
 make install
 
+# Create the user config directory
+mkdir /app/apache/conf.d/
+
 # mod macro
 cd $SCRIPT_DIR
 curl -s -L http://people.apache.org/~fabien/mod_macro/mod_macro-${APACHE_MOD_MACRO_VERSION}.tar.gz | tar zx
