@@ -31,11 +31,11 @@ export PATH=$PATH:$BUILD_DIR/bin
 pushd $BUNDLE_DIR > /dev/null
 
 echo "-----> Fetching Manifest"
-curl --silent --max-time 60 -O --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
+curl --silent -O --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
 
 if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE" -O
+    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE" -O
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
@@ -43,7 +43,7 @@ tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"  -O
+    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"  -O
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
@@ -56,7 +56,7 @@ export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"  -O
+    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"  -O
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
@@ -68,7 +68,7 @@ export PATH=$PATH:$BUILD_DIR/ant/bin
 
 if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
     echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
-    curl --silent --max-time 60 --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE" -O
+    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE" -O
 else
     echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
 fi
@@ -96,8 +96,8 @@ if [ -f package.json ]; then
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
 fi
 
-# Run the rollout script
-if [ -f rollout.sh ]; then
+# Run the rollout script, unless we're in a local env
+if [ -f rollout.sh ] && [ "$APPLICATION_ENV" != "local" ]; then
     # Make our newly downloaded binaries available
     export PATH=$PATH:$BUILD_DIR/bin
 
