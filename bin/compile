@@ -7,14 +7,18 @@ set -e
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
 CACHE_DIR=$2
+if [ "$APPLICATION_ENV" = "local" ]; then
+    LOCAL_REPO_DIR=$3
+fi
 BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
+CURL_CMD="curl --silent --max-time 60 -O --location"
 
 . $BIN_DIR/../variables.sh
 
 # Compare the md5 of the manifest file with the specified file
 # Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
-# Modified by Jesse Patching <jesse@radpenguin.ca> for use in taeram/heroku-buildpack-php
+# Modified by Jesse Patching <jesse@radpenguin.ca> for use in taeram/heroku-buildpack-php-columbo
 function check_md5() {
     TARGET="$1"
     REMOTE_MD5SUM=`cat "${BUNDLE_DIR}/${MANIFEST_FILE}" | grep "${TARGET}" | cut -d ' ' -f 1`
@@ -22,20 +26,46 @@ function check_md5() {
     ! [ "$REMOTE_MD5SUM" = "$LOCAL_MD5SUM" ]
 }
 
+# Indent the string
+function indent() {
+  sed -u 's/^/       /'
+}
+
 # include .files when moving things around
 shopt -s dotglob
 
-mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
+if [ "$APPLICATION_ENV" = "local" ]; then
+    # If in local env, just symlink the repo to here
+    ln -s "$LOCAL_REPO_DIR" ./www
+else
+    # Move all app code to www
+    cd $BUILD_DIR
+    mkdir -p $CACHE_DIR/www
+    mv * $CACHE_DIR/www
+    mv $CACHE_DIR/www .
 
+    # keep the Procfile
+    if [ -f www/Procfile ]; then
+      mv www/Procfile .
+    fi
+fi
+
+# Download the bundles
+mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
 export PATH=$PATH:$BUILD_DIR/bin
 pushd $BUNDLE_DIR > /dev/null
 
+if [ -n "`find . -type f -atime +30`" ]; then
+    echo "-----> Pruning old cached files"
+    find . -type f -atime +30 -delete | indent
+fi
+
 echo "-----> Fetching Manifest"
-curl --silent -O --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
+$CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
 
 if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE" -O
+    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE"
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
@@ -43,7 +73,7 @@ tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"  -O
+    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
@@ -56,7 +86,7 @@ export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"  -O
+    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
@@ -68,7 +98,7 @@ export PATH=$PATH:$BUILD_DIR/ant/bin
 
 if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
     echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
-    curl --silent --location "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE" -O
+    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE"
 else
     echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
 fi
@@ -90,19 +120,23 @@ export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib
 mkdir -p $BUILD_DIR/logs
 
 # Check if we need nodejs
+pushd $BUILD_DIR/www > /dev/null
 if [ -f package.json ]; then
     $BIN_DIR/compile-nodejs "$BUILD_DIR" "$CACHE_DIR"
     # Make the node binaries available to the rollout script
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
 fi
+popd > /dev/null
 
 # Run the rollout script, unless we're in a local env
+pushd $BUILD_DIR/www > /dev/null
 if [ -f rollout.sh ] && [ "$APPLICATION_ENV" != "local" ]; then
     # Make our newly downloaded binaries available
     export PATH=$PATH:$BUILD_DIR/bin
 
     ./rollout.sh "$BUILD_DIR" "$CACHE_DIR"
 fi
+popd > /dev/null
 
 cat >> boot.sh <<EOF
     # Make the Heroku environment variables available to Apache and PHP
