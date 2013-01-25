@@ -162,6 +162,12 @@ cat >> boot.sh <<EOF
 
     echo "-----> Launching apache"
     if [ "\$APPLICATION_ENV" = "local" ]; then
+        # Disable apc
+        rm -f /app/php/conf.d/apc.ini
+
+        # Disable new relic
+        rm -f /app/php/conf.d/newrelic.ini
+
         # Change who apache runs as
         echo "User $USER" > /app/apache/conf.d/user.conf
         echo "Group $USER" >> /app/apache/conf.d/user.conf
