@@ -39,7 +39,9 @@ Pre-compiling binaries
 
 ### First time setup
 
-On your local development machine, create an Amazon S3 bucket to hold your buildpack assets:
+The Vulcan build script will, if you want, automatically upload the buildpack assets to S3 for you.
+
+To enable this functionality, create an Amazon S3 bucket to hold your buildpack assets:
 ```bash
 # Install Amazon S3 command line tools
 sudo apt-get -y install s3cmd
@@ -55,14 +57,6 @@ s3cmd --configure
 s3cmd mb s3://[bucket_name]
 ```
 
-Create and launch a build server:
-```
-sudo gem install vulcan
-vulcan create [NAME]
-```
-
-### Build the buildpack
-
 On your local development machine:
 * Create `./support/config.sh` and add your S3 bucket name to it:
 
@@ -70,7 +64,25 @@ On your local development machine:
 BUILDPACK_S3_BUCKET=[bucket_name]
 ```
 
-* Run `./support/vulcan.sh apache ant php newrelic`
+Create and launch a build server:
+```bash
+sudo gem install vulcan
+vulcan create [NAME]
+```
+
+Build all of the buildpack assets:
+```bash
+./support/vulcan.sh all
+```
+
+### Updating the buildpack
+
+You can choose any option offered by the `./support/vulcan.sh` script.
+
+For example, to compile just apache and newrelic:
+```
+./support/vulcan.sh apache newrelic
+```
 
 Hacking
 -------

@@ -11,10 +11,10 @@ APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
 # include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
-    echo "Cannot find $VULCAN_CONFIG_FILE, so I won't upload these to S3 for you"
-    S3_ENABLED = 0
+    echo "Cannot find ./support/config.sh, so I won't automatically upload the bundles to S3 for you"
+    S3_ENABLED=0
 else
-    S3_ENABLED = 1
+    S3_ENABLED=1
 
     . $VULCAN_CONFIG_FILE
 
