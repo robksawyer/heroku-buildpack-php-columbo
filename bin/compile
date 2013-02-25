@@ -85,6 +85,9 @@ else
 fi
 tar xf $PHP_TGZ_FILE -C $BUILD_DIR
 
+# Set the composer cache directory
+export COMPOSER_HOME=$CACHE_DIR/composer
+
 # Make php available to the compiled app and rollout script
 ln -s /app/php/bin/php $BUILD_DIR/bin/php
 ln -s /app/php/bin/composer $BUILD_DIR/bin/composer
