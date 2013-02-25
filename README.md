@@ -57,9 +57,7 @@ s3cmd --configure
 s3cmd mb s3://[bucket_name]
 ```
 
-On your local development machine:
-* Create `./support/config.sh` and add your S3 bucket name to it:
-
+On your local development machine, create `./support/config.sh` and add your S3 bucket name to it:
 ```bash
 BUILDPACK_S3_BUCKET=[bucket_name]
 ```
