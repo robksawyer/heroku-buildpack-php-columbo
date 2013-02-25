@@ -172,6 +172,7 @@ export CPPPATH="$INCLUDE_PATH"
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
+run_npm "config get cache"
 run_npm "install -g npm"
 run_npm "install --production"
 run_npm "rebuild"
