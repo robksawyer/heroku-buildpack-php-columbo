@@ -160,12 +160,14 @@ package_download "scons" "${SCONS_VERSION}" "${VENDORED_SCONS}"
 
 # vendor node into the slug
 PATH="$BUILD_DIR/bin:$PATH"
+echo "compile-nodejs 163 => "$PATH
 echo "-----> Vendoring node into slug"
 mkdir -p "$BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
 
 # setting up paths for building
 PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
+echo "compile-nodejs 170 => "$PATH
 INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
