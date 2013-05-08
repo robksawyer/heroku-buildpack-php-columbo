@@ -8,7 +8,7 @@ ANT_TGZ_FILE="ant-${ANT_VERSION}.tar.gz"
 
 PHP_VERSION="5.3.24"    # http://php.net/downloads.php
 LIBMCRYPT_VERSION="2.5.8"    # http://sourceforge.net/projects/mcrypt/files/Libmcrypt/
-LIBMEMCACHED_VERSION="1.0.17"    # http://libmemcached.org/libMemcached.html
+LIBMEMCACHED_VERSION="1.0.16"    # http://libmemcached.org/libMemcached.html
 MEMCACHED_VERSION="2.1.0"    # pecl.php.net/package/memcached
 PHP_TGZ_FILE="php-${PHP_VERSION}.tar.gz"
 
