@@ -11,7 +11,7 @@ set -e
 # set -x
 
 # clean up leaking environment
-unset GIT_DIR
+#unset GIT_DIR
 
 # config
 SCONS_VERSION="1.2.0"
