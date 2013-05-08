@@ -59,7 +59,6 @@ popd > /dev/null
 # Download the bundles
 mkdir -p $BUNDLE_DIR $BUILD_DIR/bin
 export PATH=$PATH:$BUILD_DIR/bin
-echo "compile 62 => "$PATH
 pushd $BUNDLE_DIR > /dev/null
 
 if [ -n "`find . -type f -atime +30`" ]; then
@@ -93,7 +92,6 @@ export COMPOSER_HOME=$CACHE_DIR/composer
 ln -s /app/php/bin/php $BUILD_DIR/bin/php
 ln -s /app/php/bin/composer $BUILD_DIR/bin/composer
 export PATH=$PATH:$BUILD_DIR/php/bin
-echo "compile 96 => "$PATH
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
@@ -106,7 +104,6 @@ tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 # Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
 export PATH=$PATH:$BUILD_DIR/ant/bin
-echo "compile 108 => "$PATH
 
 if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
     echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
@@ -138,7 +135,6 @@ if [ -f package.json ]; then
 
     # Make the node binaries available to the rollout script
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
-    echo "compile 141 => "$PATH
 fi
 popd > /dev/null
 
