@@ -7,9 +7,11 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
 # apache
+echo "**** Downloading apache ${APACHE_VERSION}"
 cd $SCRIPT_DIR
-curl -s -L http://www.apache.org/dist/httpd/httpd-${APACHE_VERSION}.tar.gz | tar zx
+curl -s -L $APACHE_URL | tar zx
 
+echo "**** Compiling apache"
 cd httpd-${APACHE_VERSION}
 ./configure --prefix=/app/apache --enable-so --enable-rewrite --enable-deflate --enable-expires --enable-headers && \
 make && \
@@ -19,9 +21,11 @@ make install
 mkdir /app/apache/conf.d/
 
 # mod macro
+echo "**** Downloading mod_macro ${APACHE_MOD_MACRO_VERSION}"
 cd $SCRIPT_DIR
-curl -s -L http://people.apache.org/~fabien/mod_macro/mod_macro-${APACHE_MOD_MACRO_VERSION}.tar.gz | tar zx
+curl -s -L $APACHE_MOD_MACRO_URL | tar zx
 
+echo "**** Compiling mod_macro"
 cd mod_macro-${APACHE_MOD_MACRO_VERSION}
 /app/apache/bin/apxs -cia ./mod_macro.c
 

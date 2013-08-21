@@ -7,8 +7,9 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
 # new relic daemon
+echo "**** Downloading New Relic ${NEWRELIC_VERSION}"
 cd $SCRIPT_DIR
-curl -s -L http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz | tar zx
+curl -s -L $NEWRELIC_URL | tar zx
 
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
 mkdir -p /app/newrelic/bin /app/run
