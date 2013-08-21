@@ -59,6 +59,7 @@ BUILD_ANT=
 BUILD_PHP=
 BUILD_NEWRELIC=
 BUILD_IS_VALID=
+BUILD_MD5=
 
 while [ $# -gt 0 ]
 do
@@ -69,6 +70,7 @@ do
             BUILD_ANT=1
             BUILD_PHP=1
             BUILD_NEWRELIC=1
+            BUILD_MD5=1
             ;;
 
         apache | php)
@@ -76,14 +78,21 @@ do
             # Apache build includes php in order to get mod php
             BUILD_APACHE=1
             BUILD_PHP=1
+            BUILD_MD5=1
             ;;
         ant)
             BUILD_IS_VALID=1
             BUILD_ANT=1
+            BUILD_MD5=1
             ;;
         newrelic)
             BUILD_IS_VALID=1
             BUILD_NEWRELIC=1
+            BUILD_MD5=1
+            ;;
+        md5)
+            BUILD_IS_VALID=1
+            BUILD_MD5=1
             ;;
     esac
     shift
@@ -216,22 +225,25 @@ if [ $BUILD_ANT ]; then
 fi
 
 # Update the manifest file
-cd $BUILD_DIR/
-s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
-for TGZ_FILE in "${TGZ_FILES[@]}"; do
-    if [ -e $TGZ_FILE ]; then
-        # Remove the current md5 from the manifest
-        grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
-        mv manifest.tmp $MANIFEST_FILE
+if [ $BUILD_MD5 ]; then
+    cd $BUILD_DIR/
 
-        # Add the new md5
-        gmd5sum $TGZ_FILE >> $MANIFEST_FILE
+    s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+    TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
+    for TGZ_FILE in "${TGZ_FILES[@]}"; do
+        if [ -e $TGZ_FILE ]; then
+            # Remove the current md5 from the manifest
+            grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
+            mv manifest.tmp $MANIFEST_FILE
+
+            # Add the new md5
+            gmd5sum $TGZ_FILE >> $MANIFEST_FILE
+        fi
+    done
+
+    if [ $S3_ENABLED ]; then
+        s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+    else
+        echo "Manifest available at: $MANIFEST_FILE"
     fi
-done
-
-if [ $S3_ENABLED ]; then
-    s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-else
-    echo "Manifest available at: $MANIFEST_FILE"
 fi
