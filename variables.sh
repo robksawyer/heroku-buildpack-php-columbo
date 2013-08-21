@@ -15,9 +15,6 @@ PHP_TGZ_FILE="php-${PHP_VERSION}.tar.gz"
 NEWRELIC_VERSION="3.7.5.7"    # http://download.newrelic.com/php_agent/release/
 NEWRELIC_TGZ_FILE="newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz"
 
-IMAGEMAGICK_VERSION="3.0.1"
-IMAGEMAGICK_TGZ_FILE="imagick-${IMAGEMAGICK_VERSION}.tgz"
-
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 
 MANIFEST_FILE="manifest.md5sum"

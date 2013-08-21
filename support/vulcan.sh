@@ -44,7 +44,6 @@ BUILD_APACHE=
 BUILD_ANT=
 BUILD_PHP=
 BUILD_NEWRELIC=
-BUILD_IMAGEMAGICK=
 BUILD_IS_VALID=
 
 while [ $# -gt 0 ]
@@ -56,7 +55,6 @@ do
             BUILD_ANT=1
             BUILD_PHP=1
             BUILD_NEWRELIC=1
-            #BUILD_IMAGEMAGICK=1
             ;;
 
         apache | php)
@@ -72,10 +70,6 @@ do
         newrelic)
             BUILD_IS_VALID=1
             BUILD_NEWRELIC=1
-            ;;
-        imagemagick)
-            BUILD_IS_VALID=1
-            BUILD_IMAGEMAGICK=1
             ;;
     esac
     shift
@@ -171,15 +165,6 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
         fi
     fi
 
-     # Upload imagemagick to S3
-    if [ $BUILD_IMAGEMAGICK ]; then
-        tar zcf $IMAGEMAGICK_TGZ_FILE imagemagick logs/imagemagick*
-        if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $IMAGEMAGICK_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$IMAGEMAGICK_TGZ_FILE
-        else
-            echo "ImageMagick available at: $IMAGEMAGICK_TGZ_FILE"
-        fi
-    fi
 fi
 
 # Grab ant and upload to S3
@@ -205,7 +190,7 @@ fi
 # Update the manifest file
 cd $BUILD_DIR/
 s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" "$IMAGEMAGICK_TGZ_FILE" )
+TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
 for TGZ_FILE in "${TGZ_FILES[@]}"; do
     if [ -e $TGZ_FILE ]; then
         # Remove the current md5 from the manifest
