@@ -60,6 +60,7 @@ BUILD_PHP=
 BUILD_NEWRELIC=
 BUILD_IS_VALID=
 BUILD_MD5=
+FETCH_EXISTING_TGZS=
 
 while [ $# -gt 0 ]
 do
@@ -92,6 +93,7 @@ do
             ;;
         md5)
             BUILD_IS_VALID=1
+            FETCH_EXISTING_TGZS=1
             BUILD_MD5=1
             ;;
     esac
@@ -229,6 +231,14 @@ if [ $BUILD_MD5 ]; then
     cd $BUILD_DIR/
 
     s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+
+    if [ FETCH_EXISTING_TGZS ]; then
+        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
+        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+    fi
+
     TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
     for TGZ_FILE in "${TGZ_FILES[@]}"; do
         if [ -e $TGZ_FILE ]; then
