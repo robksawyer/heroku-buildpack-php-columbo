@@ -7,7 +7,8 @@ SCRIPT_DIR=`dirname $(readlink -f $0)`
 . $SCRIPT_DIR/variables.sh
 
 # mcrypt
-curl -s -L "http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download" -o - | tar xj
+echo "**** Downloading libmcrypt ${LIBMCRYPT_VERSION}"
+curl -s -L $LIBMCRYPT_URL -o - | tar xj
 
 cd libmcrypt-$LIBMCRYPT_VERSION
 ./configure \
@@ -16,8 +17,9 @@ cd libmcrypt-$LIBMCRYPT_VERSION
 make install
 
 # php
+echo "**** Downloading PHP ${PHP_VERSION}"
 cd $SCRIPT_DIR
-curl -s -L http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror | tar zx
+curl -s -L $PHP_URL | tar zx
 cd php-${PHP_VERSION}
 
 ./configure \
@@ -61,7 +63,8 @@ mkdir /app/php/conf.d/
 echo "$PHP_VERSION" > VERSION
 
 # composer
-curl -L -s  https://getcomposer.org/installer | /app/php/bin/php
+echo "**** Downloading Composer"
+curl -L -s  $COMPOSER_URL | /app/php/bin/php
 mv composer.phar /app/php/bin/composer
 
 # php shared libraries
@@ -69,18 +72,21 @@ mkdir /app/php/ext
 cp /usr/lib/libmysqlclient.so.16 /app/php/ext/
 
 # apc
+echo "**** Downloading APC"
 /app/php/bin/pear config-set php_dir /app/php
 echo "no" | /app/php/bin/pecl install apc
 
 # libmemcached
-curl --insecure -s -L "https://launchpad.net/libmemcached/1.0/${LIBMEMCACHED_VERSION}/+download/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz
+echo "**** Downloading libmemcached ${LIBMEMCACHED_VERSION}"
+curl --insecure -s -L $LIBMEMCACHED_URL -o - | tar xz
 
 cd libmemcached-${LIBMEMCACHED_VERSION}
 ./configure --prefix=/app/php/local && \
  make install
 
 # memcached
-curl -s -L "http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz" -o - | tar xz
+echo "**** Downloading memcached ${MEMCACHED_VERSION}"
+curl -s -L $MEMCACHED_URL -o - | tar xz
 
 cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4 # Enable memcached json serializer support: YES
@@ -91,10 +97,11 @@ make && \
 make install
 
 # new relic
+echo "**** Downloading New Relic PHP module ${NEWRELIC_VERSION}"
 ZEND_MODULE_API_VERSION=`/app/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`
 PHP_EXTENSION_DIR=`/app/php/bin/php-config --extension-dir`
 
 cd $SCRIPT_DIR
-curl -s -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+curl -s -L $NEWRELIC_URL | tar xz
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
 cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}.so ${PHP_EXTENSION_DIR}/newrelic.so

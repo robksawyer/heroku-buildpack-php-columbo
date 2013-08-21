@@ -9,6 +9,20 @@ VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
 
+##
+# Test an URL
+#
+# @param string $1 The URL to test
+##
+function is_valid_url() {
+    echo "Testing URL: $1"
+    if [  `curl --silent --head --location --insecure $1 | grep 200 | wc -l` = "0" ]; then
+        echo "URL not found: $1"
+        echo "Please update variables.sh with a valid url or version number for this package"
+        exit 1
+    fi
+}
+
 # include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
     echo "Cannot find ./support/config.sh, so I won't automatically upload the bundles to S3 for you"
@@ -88,6 +102,7 @@ fi
 
 if [ $BUILD_PHP ]; then
    BUILD_COMMAND+=("./package_php.sh")
+
 fi
 
 if [ $BUILD_NEWRELIC ]; then
@@ -108,6 +123,17 @@ if [ -e $BUILD_DIR ]; then
 fi
 mkdir -p $BUILD_DIR
 
+echo "**** Testing all package URLs to ensure they exist"
+is_valid_url $ANT_URL
+is_valid_url $APACHE_MOD_MACRO_URL
+is_valid_url $APACHE_URL
+is_valid_url $COMPOSER_URL
+is_valid_url $LIBMCRYPT_URL
+is_valid_url $LIBMEMCACHED_URL
+is_valid_url $MEMCACHED_URL
+is_valid_url $NEWRELIC_URL
+is_valid_url $PHP_URL
+
 # Copy the variables file
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 
@@ -115,6 +141,8 @@ cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 cp $SUPPORT_DIR/package_* $BUILD_DIR/
 
 if [ ! -z "$VULCAN_COMMAND" ]; then
+    echo "**** Telling Vulcan to start the build"
+    sleep 1
     vulcan build -v -s $BUILD_DIR/ -p /app -c "$VULCAN_COMMAND echo Finished." -o $BUILD_DIR/$APP_BUNDLE_TGZ_FILE
 
     echo
@@ -166,11 +194,11 @@ if [ $BUILD_ANT ]; then
     cd $BUILD_DIR/
 
     # Download ant
-    curl -L -s http://apache.sunsite.ualberta.ca//ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz | tar zx
+    curl -L -s $ANT_URL | tar zx
     mv apache-ant-${ANT_VERSION} ant
 
     # Download ant-contrib
-    curl -L -s http://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.tar.gz/download | tar zx
+    curl -L -s $ANT_CONTRIB_URL | tar zx
     mv ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar ant/ant-contrib.jar
 
     tar zcf $ANT_TGZ_FILE ant
