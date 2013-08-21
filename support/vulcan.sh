@@ -3,7 +3,7 @@
 # fail fast
 set -e
 
-SUPPORT_DIR=`dirname $(readlink -f $0)`
+SUPPORT_DIR=`dirname $(greadlink -f $0)`
 BUILD_DIR=$SUPPORT_DIR/../build
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
@@ -100,10 +100,10 @@ if [ $BUILD_NEWRELIC ]; then
     BUILD_COMMAND+=("./package_newrelic.sh")
 fi
 
-if [ $BUILD_IMAGEMAGICK ]; then
-    #TODO: Fix this
-    #BUILD_COMMAND+=("./package_imagemagick.sh")
-fi
+# if [ $BUILD_IMAGEMAGICK ]; then
+#     #TODO: Fix this
+#     BUILD_COMMAND+=("./package_imagemagick.sh")
+# fi
 
 if [ ! -z $BUILD_COMMAND ]; then
     if [ "${#BUILD_COMMAND[@]}" = "1" ]; then
