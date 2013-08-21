@@ -99,7 +99,7 @@ do
 done
 
 if [ -z $BUILD_IS_VALID ]; then
-    echo "No packages specified. Please specify at least one of: all, apache, ant, php, newrelic, imagemagick"
+    echo "No packages specified. Please specify at least one of: all, apache, ant, php, newrelic, or md5"
     exit 1;
 fi
 
