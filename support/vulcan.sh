@@ -226,7 +226,7 @@ for TGZ_FILE in "${TGZ_FILES[@]}"; do
         mv manifest.tmp $MANIFEST_FILE
 
         # Add the new md5
-        md5sum $TGZ_FILE >> $MANIFEST_FILE
+        gmd5sum $TGZ_FILE >> $MANIFEST_FILE
     fi
 done
 
