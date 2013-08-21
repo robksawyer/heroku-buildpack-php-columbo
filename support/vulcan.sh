@@ -233,6 +233,12 @@ if [ $BUILD_MD5 ]; then
     s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
 
     if [ FETCH_EXISTING_TGZS ]; then
+        echo "**** Checking to see that the TGZs exist on S3"
+        is_valid_url s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+        is_valid_url s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
+        is_valid_url s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+        is_valid_url s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+
         s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
         s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
         s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
