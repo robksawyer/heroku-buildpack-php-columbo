@@ -230,9 +230,9 @@ fi
 if [ $BUILD_MD5 ]; then
     cd $BUILD_DIR/
 
-    if [ is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE ]; then
-        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-    fi
+    # if [ is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE ]; then
+    #     s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+    # fi
 
     if [ FETCH_EXISTING_TGZS ]; then
         echo "**** Checking to see that the packages exist on S3"
@@ -251,8 +251,8 @@ if [ $BUILD_MD5 ]; then
     for TGZ_FILE in "${TGZ_FILES[@]}"; do
         if [ -e $TGZ_FILE ]; then
             # Remove the current md5 from the manifest
-            grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
-            mv manifest.tmp $MANIFEST_FILE
+            #grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
+            #mv manifest.tmp $MANIFEST_FILE
 
             # Add the new md5
             gmd5sum $TGZ_FILE >> $MANIFEST_FILE
