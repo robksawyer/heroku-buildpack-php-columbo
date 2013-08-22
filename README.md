@@ -59,6 +59,7 @@ s3cmd mb s3://[bucket_name]
 
 On your local development machine, create `./support/config.sh` and add your S3 bucket name to it:
 ```bash
+BUILDPACK_S3_URL=[public_url] -- This is used to check existence of files ex. "https://s3-us-west-2.amazonaws.com". Do NOT add the ending slash.
 BUILDPACK_S3_BUCKET=[bucket_name]
 ```
 
