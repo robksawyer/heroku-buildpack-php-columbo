@@ -15,7 +15,7 @@ if [ "$APPLICATION_ENV" = "local" ]; then
 fi
 BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
-CURL_CMD="curl --max-time 60 -O --location"
+CURL_CMD="curl --silent --max-time 60 -O --location"
 
 . $BIN_DIR/../variables.sh
 
@@ -138,6 +138,21 @@ if [ -f package.json ]; then
 
     # Make the node binaries available to the rollout script
     export PATH=$PATH:$BUILD_DIR/node_modules/.bin/
+fi
+popd > /dev/null
+
+# Check if we have Composer dependencies and vendors are not bundled
+pushd $BUILD_DIR > /dev/null
+if [ -f www/composer.json ] && [ ! -d www/vendor ]; then
+    GIT_DIR_ORIG=$GIT_DIR
+    unset GIT_DIR
+    echo "-----> Installing Composer dependencies"
+    cd www
+    LD_LIBRARY_PATH=$BUILD_DIR/php/ext $BUILD_DIR/php/bin/php -c $LP_DIR/conf/php.ini composer install --prefer-source
+    rm -rf vendor/**/.git
+    cd $BUILD_DIR
+    rm www/composer
+    export GIT_DIR=$GIT_DIR_ORIG
 fi
 popd > /dev/null
 

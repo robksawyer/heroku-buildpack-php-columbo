@@ -1,3 +1,4 @@
 /build/
 /support/config.sh
+/conf/php/conf.d/newrelic.ini
 /nbproject/

@@ -33,4 +33,4 @@ NEWRELIC_TGZ_FILE="newrelic-${NEWRELIC_VERSION}.tar.gz"
 MANIFEST_FILE="manifest.md5sum"
 
 BUILDPACK_S3_URL="https://s3-us-west-2.amazonaws.com"
-BUILDPACK_S3_BUCKET="your-bucket-here"
+BUILDPACK_S3_BUCKET="heroku-precompiled-bins"
