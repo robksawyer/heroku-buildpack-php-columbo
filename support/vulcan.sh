@@ -176,7 +176,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
 
     # Upload Apache to S3
     if [ $BUILD_APACHE ]; then
-        gzip -dc $APACHE_TGZ_FILE apache logs/apache* | tar -xf -
+        tar zcf $APACHE_TGZ_FILE apache logs/apache*
         if [ $S3_ENABLED ]; then
             s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
         else
@@ -186,7 +186,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
 
     # Upload PHP to S3
     if [ $BUILD_PHP ]; then
-        gzip -dc $PHP_TGZ_FILE php | tar -xf -
+        tar zcf $PHP_TGZ_FILE php
         if [ $S3_ENABLED ]; then
             s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
         else
@@ -196,7 +196,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
 
     # Upload new relic to S3
     if [ $BUILD_NEWRELIC ]; then
-        gzip -dc $NEWRELIC_TGZ_FILE newrelic logs/newrelic* | tar -xf -
+        tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
         if [ $S3_ENABLED ]; then
             s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
         else
@@ -218,7 +218,7 @@ if [ $BUILD_ANT ]; then
     curl -L -s $ANT_CONTRIB_URL | tar zx
     mv ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar ant/ant-contrib.jar
 
-    gzip -dc $ANT_TGZ_FILE ant | tar -xf -
+    tar zcf $ANT_TGZ_FILE ant
     if [ $S3_ENABLED ]; then
         s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
     else
