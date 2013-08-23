@@ -78,7 +78,7 @@ if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
-gzip -dc $APACHE_TGZ_FILE | tar -xf -C $BUILD_DIR -
+tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
@@ -86,7 +86,7 @@ if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
-gzip -dc $PHP_TGZ_FILE | tar -xf -C $BUILD_DIR -
+tar xf $PHP_TGZ_FILE -C $BUILD_DIR
 
 # Set the composer cache directory
 export COMPOSER_HOME=$CACHE_DIR/composer
@@ -102,7 +102,7 @@ if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
-gzip -dc $ANT_TGZ_FILE | tar -xf -C $BUILD_DIR -
+tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 
 # Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
@@ -114,7 +114,7 @@ if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
 else
     echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
 fi
-gzip -dc $NEWRELIC_TGZ_FILE | tar -xf -C $BUILD_DIR -
+tar xf $NEWRELIC_TGZ_FILE -C $BUILD_DIR
 
 popd > /dev/null
 
