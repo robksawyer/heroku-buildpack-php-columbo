@@ -60,7 +60,7 @@ BUILD_PHP=
 BUILD_NEWRELIC=
 BUILD_IS_VALID=
 BUILD_MD5=
-FETCH_EXISTING_TGZS=0
+FETCH_EXISTING_TGZS=
 
 while [ $# -gt 0 ]
 do
@@ -234,7 +234,7 @@ if [ $BUILD_MD5 ]; then
     #     s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
     # fi
 
-    if [ FETCH_EXISTING_TGZS ]; then
+    if [ $FETCH_EXISTING_TGZS ]; then
         echo "**** Checking to see that the packages exist on S3"
         is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
         is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
