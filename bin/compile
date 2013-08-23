@@ -148,7 +148,7 @@ if [ -f www/composer.json ] && [ ! -d www/vendor ]; then
     unset GIT_DIR
     echo "-----> Installing Composer dependencies"
     cd www
-    LD_LIBRARY_PATH=$BUILD_DIR/php/ext $BUILD_DIR/php/bin/php -c $LP_DIR/conf/php.ini composer install --prefer-source
+    composer install --prefer-source
     rm -rf vendor/**/.git
     cd $BUILD_DIR
     rm www/composer
