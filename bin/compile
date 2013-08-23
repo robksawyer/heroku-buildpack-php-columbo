@@ -70,23 +70,23 @@ if [ -n "`find . -type f -atime +30`" ]; then
 fi
 
 echo "-----> Fetching Manifest"
-$CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
+$CURL_CMD "$BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE"
 
 if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE"
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
-tar zxvf $APACHE_TGZ_FILE -C $BUILD_DIR
+tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
-tar zxvf $PHP_TGZ_FILE -C $BUILD_DIR
+tar xf $PHP_TGZ_FILE -C $BUILD_DIR
 
 # Set the composer cache directory
 export COMPOSER_HOME=$CACHE_DIR/composer
@@ -98,11 +98,11 @@ export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
-tar zxvf $ANT_TGZ_FILE -C $BUILD_DIR
+tar xf $ANT_TGZ_FILE -C $BUILD_DIR
 
 # Make ant available to the compiled app and rollout script
 ln -s /app/ant/bin/ant $BUILD_DIR/bin/ant
@@ -110,11 +110,11 @@ export PATH=$PATH:$BUILD_DIR/ant/bin
 
 if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
     echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
-    $CURL_CMD "https://s3.amazonaws.com/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE"
 else
     echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
 fi
-tar zxvf $NEWRELIC_TGZ_FILE -C $BUILD_DIR
+tar xf $NEWRELIC_TGZ_FILE -C $BUILD_DIR
 
 popd > /dev/null
 
