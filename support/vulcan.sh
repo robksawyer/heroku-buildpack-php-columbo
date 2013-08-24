@@ -3,7 +3,7 @@
 # fail fast
 set -e
 
-SUPPORT_DIR=`dirname $(readlink -f $0)`
+SCRIPT_DIR=$(dirname $0)
 BUILD_DIR=$SUPPORT_DIR/../build
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
@@ -239,7 +239,7 @@ for TGZ_FILE in "${TGZ_FILES[@]}"; do
         fi
 
         # Add the new md5
-        md5sum $TGZ_FILE >> $MANIFEST_FILE
+        $MD5SUM_CMD $TGZ_FILE >> $MANIFEST_FILE
     fi
 done
 

@@ -27,3 +27,14 @@ NEWRELIC_URL="http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}
 NEWRELIC_TGZ_FILE="newrelic-${NEWRELIC_VERSION}.tar.gz"
 
 MANIFEST_FILE="manifest.md5sum"
+
+# Detect which md5sum command to use
+MD5SUM_CMD=md5sums
+if [ "$OSTYPE" == "darwin"* ]; then
+    MD5SUM_CMD=gmd5sum
+fi
+
+if [ -z `which $MD5SUM_CMD` ]; then
+    echo "Cannot find \"$MD5SUM_CMD\" command. Please verify that the coreutils package is installed"
+    echo "For more information, see the README.md"
+fi

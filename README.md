@@ -62,6 +62,10 @@ On your local development machine, create `./support/config.sh` and add your S3 
 BUILDPACK_S3_BUCKET=[bucket_name]
 ```
 
+Make sure `coreutils` is installed, so we have access to the `md5sum` command:
+ * On Ubuntu or Debian: `sudo apt-get install coreutils`
+ * On Mac OS X: `sudo brew install coreutils`
+
 Create and launch a build server:
 ```bash
 sudo gem install vulcan
