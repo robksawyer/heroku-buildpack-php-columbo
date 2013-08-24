@@ -211,18 +211,22 @@ fi
 
 # Update the manifest file
 cd $BUILD_DIR/
-s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE || true
 TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
 for TGZ_FILE in "${TGZ_FILES[@]}"; do
     if [ -e $TGZ_FILE ]; then
-        # Remove the current md5 from the manifest
-        grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
-        mv manifest.tmp $MANIFEST_FILE
+        if [ -e $MANIFEST_FILE ]; then
+            # Remove the current md5
+            grep -v "$TGZ_FILE" $MANIFEST_FILE | tee $MANIFEST_FILE > /dev/null
+        fi
 
         # Add the new md5
         md5sum $TGZ_FILE >> $MANIFEST_FILE
     fi
 done
+
+# Sort the manifest file, just to keep it tidy
+cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE
 
 if [ $S3_ENABLED ]; then
     s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
