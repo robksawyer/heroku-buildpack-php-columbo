@@ -29,7 +29,7 @@ NEWRELIC_TGZ_FILE="newrelic-${NEWRELIC_VERSION}.tar.gz"
 MANIFEST_FILE="manifest.md5sum"
 
 # Detect which md5sum command to use
-MD5SUM_CMD=md5sums
+MD5SUM_CMD=md5sum
 if [ "$OSTYPE" == "darwin"* ]; then
     MD5SUM_CMD=gmd5sum
 fi
