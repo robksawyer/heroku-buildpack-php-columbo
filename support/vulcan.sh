@@ -116,16 +116,32 @@ fi
 BUILD_COMMAND=()
 if [ $BUILD_APACHE ]; then
    BUILD_COMMAND+=("./package_apache.sh")
+
+    is_valid_url $APACHE_MOD_MACRO_URL
+    is_valid_url $APACHE_URL
 fi
 
 if [ $BUILD_PHP ]; then
    BUILD_COMMAND+=("./package_php.sh")
 
+    is_valid_url $COMPOSER_URL
+    is_valid_url $LIBMCRYPT_URL
+    is_valid_url $LIBMEMCACHED_URL
+    is_valid_url $MEMCACHED_URL
+    is_valid_url $NEWRELIC_URL
+    is_valid_url $PHP_URL
 fi
 
 if [ $BUILD_NEWRELIC ]; then
     BUILD_COMMAND+=("./package_newrelic.sh")
+
+    is_valid_url $NEWRELIC_URL
 fi
+
+if [ $BUILD_ANT ]; then
+    is_valid_url $ANT_URL
+fi
+
 
 if [ ! -z $BUILD_COMMAND ]; then
     if [ "${#BUILD_COMMAND[@]}" = "1" ]; then
@@ -140,17 +156,6 @@ if [ -e $BUILD_DIR ]; then
     rm -Rf $BUILD_DIR
 fi
 mkdir -p $BUILD_DIR
-
-echo "**** Testing all package URLs to ensure they exist"
-is_valid_url $ANT_URL
-is_valid_url $APACHE_MOD_MACRO_URL
-is_valid_url $APACHE_URL
-is_valid_url $COMPOSER_URL
-is_valid_url $LIBMCRYPT_URL
-is_valid_url $LIBMEMCACHED_URL
-is_valid_url $MEMCACHED_URL
-is_valid_url $NEWRELIC_URL
-is_valid_url $PHP_URL
 
 # Copy the variables file
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
@@ -226,26 +231,24 @@ if [ $BUILD_ANT ]; then
     fi
 fi
 
-
 # Update the manifest file
 cd $BUILD_DIR/
 s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE || true
 TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
-MANIFEST_FILE_TMP=`mktemp`
 for TGZ_FILE in "${TGZ_FILES[@]}"; do
     if [ -e "$TGZ_FILE" ]; then
-        if [ -e "$MANIFEST_FILE" ]; then
-            # Remove the current md5
-            cat "$MANIFEST_FILE" | grep -v "$TGZ_FILE" | tee "$MANIFEST_FILE" || true
-        fi
+        # Remove the old md5
+        cat $MANIFEST_FILE | grep -v "$TGZ_FILE" > manifest.tmp || true
+        mv manifest.tmp $MANIFEST_FILE
 
         # Add the new md5
         $MD5SUM_CMD "$TGZ_FILE" >> "$MANIFEST_FILE"
     fi
 done
+more manifest.md5sum
 
-# Sort the manifest file, just to keep it tidy
-cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE
+# Sort the manifest file
+cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE > /dev/null
 
 if [ $S3_ENABLED ]; then
     upload_to_s3 "$MANIFEST_FILE"
