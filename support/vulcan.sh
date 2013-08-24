@@ -32,7 +32,7 @@ function upload_to_s3() {
     s3cmd put --acl-public "$1" "s3://$BUILDPACK_S3_BUCKET/$1"
 
     # Retry the upload once if it fails
-    if [ $? > 0 ] && [ -z "$2" ]; then
+    if [ "$?" != "0" ] && [ -z "$2" ]; then
         echo "Upload failed, retrying upload..."
         upload_to_s3 "$1" "retry"
     elif [ ! -z "$2" ]; then
