@@ -226,19 +226,21 @@ if [ $BUILD_ANT ]; then
     fi
 fi
 
+
 # Update the manifest file
 cd $BUILD_DIR/
 s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE || true
 TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
+MANIFEST_FILE_TMP=`mktemp`
 for TGZ_FILE in "${TGZ_FILES[@]}"; do
-    if [ -e $TGZ_FILE ]; then
-        if [ -e $MANIFEST_FILE ]; then
+    if [ -e "$TGZ_FILE" ]; then
+        if [ -e "$MANIFEST_FILE" ]; then
             # Remove the current md5
-            grep -v "$TGZ_FILE" $MANIFEST_FILE | tee $MANIFEST_FILE > /dev/null
+            cat "$MANIFEST_FILE" | grep -v "$TGZ_FILE" | tee "$MANIFEST_FILE" || true
         fi
 
         # Add the new md5
-        $MD5SUM_CMD $TGZ_FILE >> $MANIFEST_FILE
+        $MD5SUM_CMD "$TGZ_FILE" >> "$MANIFEST_FILE"
     fi
 done
 
