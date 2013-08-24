@@ -23,6 +23,24 @@ function is_valid_url() {
     fi
 }
 
+##
+# Upload a file to S3
+#
+# @param string $1 The file name
+##
+function upload_to_s3() {
+    s3cmd put --acl-public "$1" "s3://$BUILDPACK_S3_BUCKET/$1"
+
+    # Retry the upload once if it fails
+    if [ $? > 0 ] && [ -z "$2" ]; then
+        echo "Upload failed, retrying upload..."
+        upload_to_s3 "$1" "retry"
+    elif [ ! -z "$2" ]; then
+        echo "Upload failed"
+        exit 1;
+    fi
+}
+
 # include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
     echo "Cannot find ./support/config.sh, so I won't automatically upload the bundles to S3 for you"
@@ -162,7 +180,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_APACHE ]; then
         tar zcf $APACHE_TGZ_FILE apache logs/apache*
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+            upload_to_s3 "$APACHE_TGZ_FILE"
         else
             echo "Apache available at: $APACHE_TGZ_FILE"
         fi
@@ -172,7 +190,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_PHP ]; then
         tar zcf $PHP_TGZ_FILE php
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
+            upload_to_s3 "$PHP_TGZ_FILE"
         else
             echo "PHP available at: $PHP_TGZ_FILE"
         fi
@@ -182,7 +200,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_NEWRELIC ]; then
         tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+            upload_to_s3 "$NEWRELIC_TGZ_FILE"
         else
             echo "New Relic available at: $NEWRELIC_TGZ_FILE"
         fi
@@ -203,7 +221,7 @@ if [ $BUILD_ANT ]; then
 
     tar zcf $ANT_TGZ_FILE ant
     if [ $S3_ENABLED ]; then
-        s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+        upload_to_s3 "$ANT_TGZ_FILE"
     else
         echo "Ant available at: $NEWRELIC_TGZ_FILE"
     fi
@@ -229,7 +247,7 @@ done
 cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE
 
 if [ $S3_ENABLED ]; then
-    s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
+    upload_to_s3 "$MANIFEST_FILE"
 else
     echo "Manifest available at: $MANIFEST_FILE"
 fi
