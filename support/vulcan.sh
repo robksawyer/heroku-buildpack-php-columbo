@@ -3,7 +3,7 @@
 # fail fast
 set -e
 
-SCRIPT_DIR=$(dirname $0)
+SUPPORT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BUILD_DIR=$SUPPORT_DIR/../build
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
@@ -157,7 +157,6 @@ cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 
 # Copy the package scripts
 cp $SUPPORT_DIR/package_* $BUILD_DIR/
-
 if [ ! -z "$VULCAN_COMMAND" ]; then
     echo "**** Telling Vulcan to start the build"
     sleep 1

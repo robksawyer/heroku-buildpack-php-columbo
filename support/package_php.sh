@@ -3,7 +3,7 @@
 # fail fast
 set -e
 
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $SCRIPT_DIR/variables.sh
 
 # mcrypt
