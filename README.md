@@ -20,6 +20,14 @@ Requirements
 * Your Amazon AWS Access Key and Secret Key
 * An [Amazon S3](http://aws.amazon.com/s3/) bucket, for storing the buildpack assets
 
+Configuring Apache and PHP
+==========================
+
+The configuration files for Apache and PHP are in the `/conf/` directory.
+
+Simply update them as you see fit, and commit them to your fork of this
+buildpack.
+
 Setup
 =====
 
