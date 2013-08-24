@@ -12,8 +12,8 @@ curl -s -L $LIBMCRYPT_URL -o - | tar xj
 
 cd libmcrypt-$LIBMCRYPT_VERSION
 ./configure \
---prefix=/app/php/local \
---disable-rpath && \
+    --prefix=/app/php/local \
+    --disable-rpath && \
 make install
 
 # php
@@ -92,7 +92,10 @@ cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4 # Enable memcached json serializer support: YES
 sed -i -e '21 s/no, no/yes, yes/' ./config.m4 # Disable memcached sasl support: YES
 /app/php/bin/phpize && \
-./configure --with-libmemcached-dir=/app/php/local/ --prefix=/app/php --with-php-config=/app/php/bin/php-config && \
+./configure \
+    --with-libmemcached-dir=/app/php/local/ \
+    --prefix=/app/php \
+    --with-php-config=/app/php/bin/php-config && \
 make && \
 make install
 

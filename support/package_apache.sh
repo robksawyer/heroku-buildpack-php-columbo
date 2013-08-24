@@ -13,7 +13,14 @@ curl -s -L $APACHE_URL | tar zx
 
 echo "**** Compiling apache"
 cd httpd-${APACHE_VERSION}
-./configure --prefix=/app/apache --enable-so --enable-rewrite --enable-deflate --enable-expires --enable-headers && \
+./configure \
+    --prefix=/app/apache \
+    --enable-so \
+    --enable-rewrite \
+    --enable-deflate \
+    --enable-expires \
+    --enable-headers \
+    --with-included-apr && \
 make && \
 make install
 
