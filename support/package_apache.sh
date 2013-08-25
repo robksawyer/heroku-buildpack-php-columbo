@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $SCRIPT_DIR/variables.sh
 
 # apache
-echo "**** Downloading apache ${APACHE_VERSION}"
+echo "**** Downloading Apache ${APACHE_VERSION}"
 cd $SCRIPT_DIR
 curl -s -L $APACHE_URL | tar zx
 
@@ -19,8 +19,7 @@ cd httpd-${APACHE_VERSION}
     --enable-rewrite \
     --enable-deflate \
     --enable-expires \
-    --enable-headers \
-    --with-included-apr && \
+    --enable-headers && \
 make && \
 make install
 
