@@ -160,6 +160,11 @@ cat >> boot.sh <<EOF
         ln -s /app/www/config/apache.conf /app/apache/conf.d/app.conf
     fi
 
+    if [ -f www/config/php.ini ]; then
+        echo "-----> Including custom PHP config"
+        ln -s /app/www/config/php.ini /app/php/conf.d/php.custom.ini
+    fi
+
     # Insert the New Relic key (from heroku config) into newrelic.ini
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
