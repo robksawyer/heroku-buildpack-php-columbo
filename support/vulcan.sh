@@ -3,25 +3,12 @@
 # fail fast
 set -e
 
-SUPPORT_DIR=`dirname $(greadlink -f $0)`
+SUPPORT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BUILD_DIR=$SUPPORT_DIR/../build
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
+UTILS_FILE=$SUPPORT_DIR/utils.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
-
-##
-# Test an URL
-#
-# @param string $1 The URL to test
-##
-function is_valid_url() {
-    echo "Testing URL: $1"
-    if [  `curl --silent --head --location --insecure $1 | grep 200 | wc -l` = "0" ]; then
-        echo "URL not found: $1"
-        echo "Please update variables.sh with a valid url or version number for this package"
-        exit 1
-    fi
-}
 
 # include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
@@ -52,6 +39,7 @@ else
 fi
 
 . $VARIABLES_FILE
+. $UTILS_FILE
 
 # What are we building?
 BUILD_APACHE=
@@ -62,30 +50,28 @@ BUILD_IS_VALID=
 BUILD_MD5=
 FETCH_EXISTING_TGZS=
 
-while [ $# -gt 0 ]
-do
+while [ $# -gt 0 ]; do
     case "$1" in
         all)
             BUILD_IS_VALID=1
-            BUILD_APACHE=1
             BUILD_ANT=1
-            BUILD_PHP=1
+            BUILD_APACHE=1
             BUILD_NEWRELIC=1
+            BUILD_PHP=1
             BUILD_MD5=1
             ;;
 
-        apache | php)
-            BUILD_IS_VALID=1
-            # Apache build includes php in order to get mod php
-            BUILD_APACHE=1
-            BUILD_PHP=1
-            BUILD_MD5=1
-            ;;
         ant)
             BUILD_IS_VALID=1
             BUILD_ANT=1
             BUILD_MD5=1
             ;;
+
+        apache)
+            BUILD_IS_VALID=1
+            BUILD_APACHE=1
+            ;;
+
         newrelic)
             BUILD_IS_VALID=1
             BUILD_NEWRELIC=1
@@ -95,6 +81,11 @@ do
             BUILD_IS_VALID=1
             FETCH_EXISTING_TGZS=1
             BUILD_MD5=1
+            ;;
+
+        php)
+            BUILD_IS_VALID=1
+            BUILD_PHP=1
             ;;
     esac
     shift
@@ -109,15 +100,34 @@ fi
 BUILD_COMMAND=()
 if [ $BUILD_APACHE ]; then
    BUILD_COMMAND+=("./package_apache.sh")
+
+    is_valid_url $PCRE_URL
+    is_valid_url $APACHE_URL
+    is_valid_url $APACHE_APR_URL
+    is_valid_url $APACHE_APR_UTIL_URL
+    is_valid_url $APACHE_MOD_FCGID_URL
+    is_valid_url $APACHE_MOD_MACRO_URL
 fi
 
 if [ $BUILD_PHP ]; then
    BUILD_COMMAND+=("./package_php.sh")
 
+    is_valid_url $COMPOSER_URL
+    is_valid_url $LIBMCRYPT_URL
+    is_valid_url $LIBMEMCACHED_URL
+    is_valid_url $MEMCACHED_URL
+    is_valid_url $NEWRELIC_URL
+    is_valid_url $PHP_URL
 fi
 
 if [ $BUILD_NEWRELIC ]; then
     BUILD_COMMAND+=("./package_newrelic.sh")
+
+    is_valid_url $NEWRELIC_URL
+fi
+
+if [ $BUILD_ANT ]; then
+    is_valid_url $ANT_URL
 fi
 
 # if [ $BUILD_IMAGEMAGICK ]; then
@@ -139,23 +149,14 @@ if [ -e $BUILD_DIR ]; then
 fi
 mkdir -p $BUILD_DIR
 
-echo "**** Testing all package URLs to ensure they exist"
-is_valid_url $ANT_URL
-is_valid_url $APACHE_MOD_MACRO_URL
-is_valid_url $APACHE_URL
-is_valid_url $COMPOSER_URL
-is_valid_url $LIBMCRYPT_URL
-is_valid_url $LIBMEMCACHED_URL
-is_valid_url $MEMCACHED_URL
-is_valid_url $NEWRELIC_URL
-is_valid_url $PHP_URL
-
 # Copy the variables file
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
 
+# Copy the utils file
+cp $UTILS_FILE $BUILD_DIR/utils.sh
+
 # Copy the package scripts
 cp $SUPPORT_DIR/package_* $BUILD_DIR/
-
 if [ ! -z "$VULCAN_COMMAND" ]; then
     echo "**** Telling Vulcan to start the build"
     sleep 1
@@ -178,7 +179,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_APACHE ]; then
         tar zcf $APACHE_TGZ_FILE apache logs/apache*
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $APACHE_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+            upload_to_s3 "$APACHE_TGZ_FILE"
         else
             echo "Apache available at: $APACHE_TGZ_FILE"
         fi
@@ -188,7 +189,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_PHP ]; then
         tar zcf $PHP_TGZ_FILE php
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $PHP_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
+            upload_to_s3 "$PHP_TGZ_FILE"
         else
             echo "PHP available at: $PHP_TGZ_FILE"
         fi
@@ -198,7 +199,7 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
     if [ $BUILD_NEWRELIC ]; then
         tar zcf $NEWRELIC_TGZ_FILE newrelic logs/newrelic*
         if [ $S3_ENABLED ]; then
-            s3cmd put --acl-public $NEWRELIC_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
+            upload_to_s3 "$NEWRELIC_TGZ_FILE"
         else
             echo "New Relic available at: $NEWRELIC_TGZ_FILE"
         fi
@@ -220,48 +221,30 @@ if [ $BUILD_ANT ]; then
 
     tar zcf $ANT_TGZ_FILE ant
     if [ $S3_ENABLED ]; then
-        s3cmd put --acl-public $ANT_TGZ_FILE s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
+        upload_to_s3 "$ANT_TGZ_FILE"
     else
         echo "Ant available at: $NEWRELIC_TGZ_FILE"
     fi
 fi
 
 # Update the manifest file
-if [ $BUILD_MD5 ]; then
-    cd $BUILD_DIR/
+cd $BUILD_DIR/
+s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE || true
+TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
+for TGZ_FILE in "${TGZ_FILES[@]}"; do
+    if [ -e "$TGZ_FILE" ]; then
+        # Remove the old md5
+        cat $MANIFEST_FILE | grep -v "$TGZ_FILE" > manifest.tmp || true
+        mv manifest.tmp $MANIFEST_FILE
 
-    # if [ is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$MANIFEST_FILE ]; then
-    #     s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-    # fi
-
-    if [ $FETCH_EXISTING_TGZS ]; then
-        echo "**** Checking to see that the packages exist on S3"
-        is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
-        is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
-        is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
-        is_valid_url $BUILDPACK_S3_URL/$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
-
-        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE
-        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE
-        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE
-        s3cmd get --force s3://$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE
+        # Add the new md5
+        $MD5SUM_CMD "$TGZ_FILE" >> "$MANIFEST_FILE"
     fi
+# Sort the manifest file
+cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE > /dev/null
 
-    TGZ_FILES=( "$APACHE_TGZ_FILE" "$ANT_TGZ_FILE" "$PHP_TGZ_FILE" "$NEWRELIC_TGZ_FILE" )
-    for TGZ_FILE in "${TGZ_FILES[@]}"; do
-        if [ -e $TGZ_FILE ]; then
-            # Remove the current md5 from the manifest
-            #grep -v "$TGZ_FILE" $MANIFEST_FILE > manifest.tmp
-            #mv manifest.tmp $MANIFEST_FILE
-
-            # Add the new md5
-            gmd5sum $TGZ_FILE >> $MANIFEST_FILE
-        fi
-    done
-
-    if [ $S3_ENABLED ]; then
-        s3cmd put --acl-public $MANIFEST_FILE s3://$BUILDPACK_S3_BUCKET/$MANIFEST_FILE
-    else
-        echo "Manifest available at: $MANIFEST_FILE"
-    fi
+if [ $S3_ENABLED ]; then
+    upload_to_s3 "$MANIFEST_FILE"
+else
+    echo "Manifest available at: $MANIFEST_FILE"
 fi

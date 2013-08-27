@@ -3,7 +3,7 @@
 # fail fast
 set -e
 
-SCRIPT_DIR=`dirname $(readlink -f $0)`
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $SCRIPT_DIR/variables.sh
 
 # mcrypt
@@ -12,8 +12,8 @@ curl -s -L $LIBMCRYPT_URL -o - | tar xj
 
 cd libmcrypt-$LIBMCRYPT_VERSION
 ./configure \
---prefix=/app/php/local \
---disable-rpath && \
+    --prefix=/app/php/local \
+    --disable-rpath && \
 make install
 
 # php
@@ -24,11 +24,11 @@ cd php-${PHP_VERSION}
 
 ./configure \
     --prefix=/app/php \
-    --with-apxs2=/app/apache/bin/apxs \
     --with-config-file-path=/app/php \
     --with-config-file-scan-dir=/app/php/conf.d/ \
     --disable-debug \
     --disable-rpath \
+    --enable-fpm \
     --enable-gd-native-ttf \
     --enable-inline-optimization \
     --enable-libxml \
@@ -62,6 +62,12 @@ make install
 # create the php config scan dir
 mkdir /app/php/conf.d/
 
+# create the php-fpm config scan dir
+mkdir /app/php/etc/fpm.d/
+
+# create the run dir for php-fpm
+mkdir /app/run/
+
 echo "$PHP_VERSION" > VERSION
 
 # composer
@@ -94,7 +100,10 @@ cd memcached-${MEMCACHED_VERSION}
 sed -i -e '18 s/no, no/yes, yes/' ./config.m4 # Enable memcached json serializer support: YES
 sed -i -e '21 s/no, no/yes, yes/' ./config.m4 # Disable memcached sasl support: YES
 /app/php/bin/phpize && \
-./configure --with-libmemcached-dir=/app/php/local/ --prefix=/app/php --with-php-config=/app/php/bin/php-config && \
+./configure \
+    --with-libmemcached-dir=/app/php/local/ \
+    --prefix=/app/php \
+    --with-php-config=/app/php/bin/php-config && \
 make && \
 make install
 
@@ -106,4 +115,9 @@ PHP_EXTENSION_DIR=`/app/php/bin/php-config --extension-dir`
 cd $SCRIPT_DIR
 curl -s -L $NEWRELIC_URL | tar xz
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
-cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}.so ${PHP_EXTENSION_DIR}/newrelic.so
+cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}-zts.so ${PHP_EXTENSION_DIR}/newrelic-zts.so
+
+# Create the empty log files
+cd $SCRIPT_DIR
+mkdir -p /app/logs/
+touch /app/logs/php-fpm.error.log
