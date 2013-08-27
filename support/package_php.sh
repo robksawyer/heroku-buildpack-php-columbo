@@ -53,8 +53,6 @@ cd php-${PHP_VERSION}
     --with-pgsql \
     --with-pdo-pgsql \
     --with-png-dir \
-    --with-imagemagick \
-    --with-exif \
     --with-zlib  && \
 make && \
 make install

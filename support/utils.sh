@@ -37,7 +37,7 @@ function upload_to_s3() {
 function check_md5() {
     TARGET="$1"
     REMOTE_MD5SUM=`cat "${BUNDLE_DIR}/${MANIFEST_FILE}" | grep "${TARGET}" | cut -d ' ' -f 1`
-    LOCAL_MD5SUM=`md5sum ${BUNDLE_DIR}/${TARGET} | cut -d ' ' -f 1`
+    LOCAL_MD5SUM=`$MD5SUM_CMD ${BUNDLE_DIR}/${TARGET} | cut -d ' ' -f 1`
     ! [ "$REMOTE_MD5SUM" = "$LOCAL_MD5SUM" ]
 }
 
