@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# Fail fast
+set -e
+set -u
+
+# Test a local deploy
+BIN_DIR=`dirname $(readlink -f $0)`
+BUILDPACK_DIR=$BIN_DIR/../
+CURL_CMD="curl --silent --max-time 60 -O --location"
+
+. $BUILDPACK_DIR/variables.sh
+. $BUILDPACK_DIR/support/config.sh
+. $BUILDPACK_DIR/support/utils.sh
+
+mkdir -p /app/{logs,www,run}
+sudo chown $USER:$USER -R /app
+
+mkdir -p $BUILDPACK_DIR/.local-cache
+cd $BUILDPACK_DIR/.local-cache
+if [ ! -e "$APACHE_TGZ_FILE" ]; then
+    echo "Downloading $APACHE_TGZ_FILE"
+    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$APACHE_TGZ_FILE"
+fi
+tar xf $APACHE_TGZ_FILE -C /app
+
+if [ ! -e "$PHP_TGZ_FILE" ]; then
+    echo "Downloading $PHP_TGZ_FILE"
+    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$PHP_TGZ_FILE"
+fi
+tar xf $PHP_TGZ_FILE -C /app
+
+if [ ! -e "$ANT_TGZ_FILE" ]; then
+    echo "Downloading $ANT_TGZ_FILE"
+    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$ANT_TGZ_FILE"
+fi
+tar xf $ANT_TGZ_FILE -C /app
+
+if [ ! -e "$NEWRELIC_TGZ_FILE" ]; then
+    echo "Downloading $NEWRELIC_TGZ_FILE"
+    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$NEWRELIC_TGZ_FILE"
+fi
+tar xf $NEWRELIC_TGZ_FILE -C /app
+
+# Copy configs into place
+cp $BUILDPACK_DIR/conf/apache/httpd.conf /app/apache/conf
+cp $BUILDPACK_DIR/conf/php/php.ini /app/php/php.ini
+cp $BUILDPACK_DIR/conf/php/conf.d/* /app/php/conf.d/
+cp $BUILDPACK_DIR/conf/php/php-fpm.conf /app/php/etc/php-fpm.conf
+
+# Make the Heroku environment variables available to Apache and PHP
+echo "-----> Including env variables in Apache"
+for var in `env|cut -f1 -d=`; do
+    echo "PassEnv $var" >> /app/apache/conf.d/envvars.conf
+done
+
+# Make sure we can tweak the files
+sudo chown $USER:$USER -R /app
+
+# Tail the logs
+killall tail
+tail --follow=name --retry --quiet /app/logs/* &
+
+# Start php5-fpm
+killall php-fpm
+/app/php/sbin/php-fpm --nodaemonize &
+
+# Start apache
+export PORT=4000
+killall httpd
+/app/apache/bin/httpd -DNO_DETACH

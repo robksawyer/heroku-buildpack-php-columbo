@@ -10,43 +10,22 @@ unset GIT_DIR
 BIN_DIR=`dirname $(readlink -f $0)`
 BUILD_DIR=$1
 CACHE_DIR=$2
-if [ "$APPLICATION_ENV" = "local" ]; then
-    LOCAL_REPO_DIR=$3
-fi
 BUNDLE_DIR="$CACHE_DIR/bundles"
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 CURL_CMD="curl --silent --max-time 60 -O --location"
 
 . $BIN_DIR/../variables.sh
-
-# Compare the md5 of the manifest file with the specified file
-# Retrieved on 2012-11-17 from https://github.com/iphoting/heroku-buildpack-php-tyler/blob/master/bin/compile
-# Modified by Jesse Patching <jesse@radpenguin.ca> for use in taeram/heroku-buildpack-php-columbo
-function check_md5() {
-    TARGET="$1"
-    REMOTE_MD5SUM=`cat "${BUNDLE_DIR}/${MANIFEST_FILE}" | grep "${TARGET}" | cut -d ' ' -f 1`
-    LOCAL_MD5SUM=`md5sum ${BUNDLE_DIR}/${TARGET} | cut -d ' ' -f 1`
-    ! [ "$REMOTE_MD5SUM" = "$LOCAL_MD5SUM" ]
-}
-
-# Indent the string
-function indent() {
-  sed -u 's/^/       /'
-}
+. $BIN_DIR/../support/utils.sh
 
 # include .files when moving things around
 shopt -s dotglob
 
 pushd $BUILD_DIR > /dev/null
-if [ "$APPLICATION_ENV" = "local" ]; then
-    # If in local env, just symlink the repo to here
-    ln -s "$LOCAL_REPO_DIR" ./www
-else
-    # Move all app code to www
-    mkdir -p $CACHE_DIR/www
-    mv * $CACHE_DIR/www
-    mv $CACHE_DIR/www .
-fi
+
+# Move all app code to www
+mkdir -p $CACHE_DIR/www
+mv * $CACHE_DIR/www
+mv $CACHE_DIR/www .
 
 # keep the Procfile
 if [ -f www/Procfile ]; then
@@ -124,12 +103,15 @@ pushd $BUILD_DIR > /dev/null
 cp $LP_DIR/conf/apache/httpd.conf apache/conf
 cp $LP_DIR/conf/php/php.ini php/php.ini
 cp $LP_DIR/conf/php/conf.d/* php/conf.d/
+cp $LP_DIR/conf/php/php-fpm.conf php/etc/php-fpm.conf
+cp $LP_DIR/conf/php/php-fpm-wrapper php/sbin/php-fpm-wrapper
 
 # PHP shared library path (just for the compile step)
 export LD_LIBRARY_PATH=$BUILD_DIR/php/ext:$BUILD_DIR/php/local/lib
 
-# Create the logs directory
+# Create the logs and directories
 mkdir -p $BUILD_DIR/logs
+mkdir -p $BUILD_DIR/run
 
 # Check if we need nodejs
 pushd $BUILD_DIR > /dev/null
@@ -149,7 +131,7 @@ fi
 popd > /dev/null
 
 cat >> boot.sh <<EOF
-    # Make the Heroku environment variables available to Apache and PHP
+    # Make the Heroku environment variables available to Apache
     echo "-----> Including env variables in Apache"
     for var in \`env|cut -f1 -d=\`; do
         echo "PassEnv \$var" >> /app/apache/conf.d/envvars.conf;
@@ -165,45 +147,30 @@ cat >> boot.sh <<EOF
         ln -s /app/www/config/php.ini /app/php/conf.d/php.custom.ini
     fi
 
+    echo "-----> Giving PHP FPM access to the env variables"
+    env | awk '{print "export \""\$0"\""}' > /app/php/sbin/php-fpm.envvars
+
+    if [ -f www/config/php-fpm.conf ]; then
+        echo "-----> Including custom PHP FPM config"
+        ln -s /app/www/config/php-fpm.conf /app/php/etc/fpm.d/php-fpm.custom.conf
+    fi
+
     # Insert the New Relic key (from heroku config) into newrelic.ini
     sed -i "s|REPLACE_WITH_REAL_KEY|${NEW_RELIC_LICENSE_KEY}|g" /app/php/conf.d/newrelic.ini
 
     # PHP shared library path (for the application)
     export LD_LIBRARY_PATH=/app/php/ext:/app/php/local/lib
 
+    echo "-----> Launching PHP FPM"
+    /app/php/sbin/php-fpm --nodaemonize &
+
     echo "-----> Launching apache"
-    if [ "\$APPLICATION_ENV" = "local" ]; then
-        # Disable apc
-        rm -f /app/php/conf.d/apc.ini
+    # Tail the logs
+    tail --follow=name --retry --quiet /app/logs/* &
 
-        # Disable new relic
-        rm -f /app/php/conf.d/newrelic.ini
-
-        # Change who apache runs as
-        echo "User $USER" > /app/apache/conf.d/user.conf
-        echo "Group $USER" >> /app/apache/conf.d/user.conf
-
-        sudo -E LD_LIBRARY_PATH=\$LD_LIBRARY_PATH /app/apache/bin/httpd
-    else
-        # Tail the logs
-        tail --follow=name --retry --quiet /app/logs/* &
-
-        exec /app/apache/bin/httpd -DNO_DETACH
-    fi
+    exec /app/apache/bin/httpd -DNO_DETACH
 EOF
 
 chmod +x boot.sh
-
-if [ "$APPLICATION_ENV" = "local" ]; then
-    cat >> restart.sh <<EOF
-        # PHP shared library path (for the application)
-        export LD_LIBRARY_PATH=/app/php/ext:/app/php/local/lib
-
-        sudo killall httpd
-        sleep 1
-        sudo -E LD_LIBRARY_PATH=\$LD_LIBRARY_PATH /app/apache/bin/httpd
-EOF
-    chmod +x restart.sh
-fi
 
 popd > /dev/null

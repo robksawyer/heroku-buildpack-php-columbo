@@ -1,0 +1,8 @@
+#!/bin/sh
+PHP_FCGI_MAX_REQUESTS=10000
+export PHP_FCGI_MAX_REQUESTS
+
+# Give PHP access to all environment variables
+. /app/php/sbin/php-fpm.envvars
+
+exec /app/php/bin/php-cgi

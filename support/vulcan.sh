@@ -7,39 +7,8 @@ SUPPORT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BUILD_DIR=$SUPPORT_DIR/../build
 VULCAN_CONFIG_FILE=$SUPPORT_DIR/config.sh
 VARIABLES_FILE=$SUPPORT_DIR/../variables.sh
+UTILS_FILE=$SUPPORT_DIR/utils.sh
 APP_BUNDLE_TGZ_FILE=app-bundle.tar.gz
-
-##
-# Test an URL
-#
-# @param string $1 The URL to test
-##
-function is_valid_url() {
-    echo "Testing URL: $1"
-    if [  `curl --silent --head --location --insecure $1 | grep 200 | wc -l` = "0" ]; then
-        echo "URL not found: $1"
-        echo "Please update variables.sh with a valid url or version number for this package"
-        exit 1
-    fi
-}
-
-##
-# Upload a file to S3
-#
-# @param string $1 The file name
-##
-function upload_to_s3() {
-    s3cmd put --acl-public "$1" "s3://$BUILDPACK_S3_BUCKET/$1"
-
-    # Retry the upload once if it fails
-    if [ "$?" != "0" ] && [ -z "$2" ]; then
-        echo "Upload failed, retrying upload..."
-        upload_to_s3 "$1" "retry"
-    elif [ ! -z "$2" ]; then
-        echo "Upload failed"
-        exit 1;
-    fi
-}
 
 # include the vulcan config file
 if [ ! -e $VULCAN_CONFIG_FILE ]; then
@@ -70,6 +39,7 @@ else
 fi
 
 . $VARIABLES_FILE
+. $UTILS_FILE
 
 # What are we building?
 BUILD_APACHE=
@@ -78,30 +48,34 @@ BUILD_PHP=
 BUILD_NEWRELIC=
 BUILD_IS_VALID=
 
-while [ $# -gt 0 ]
-do
+while [ $# -gt 0 ]; do
     case "$1" in
         all)
             BUILD_IS_VALID=1
-            BUILD_APACHE=1
             BUILD_ANT=1
-            BUILD_PHP=1
+            BUILD_APACHE=1
             BUILD_NEWRELIC=1
+            BUILD_PHP=1
             ;;
 
-        apache | php)
-            BUILD_IS_VALID=1
-            # Apache build includes php in order to get mod php
-            BUILD_APACHE=1
-            BUILD_PHP=1
-            ;;
         ant)
             BUILD_IS_VALID=1
             BUILD_ANT=1
             ;;
+
+        apache)
+            BUILD_IS_VALID=1
+            BUILD_APACHE=1
+            ;;
+
         newrelic)
             BUILD_IS_VALID=1
             BUILD_NEWRELIC=1
+            ;;
+
+        php)
+            BUILD_IS_VALID=1
+            BUILD_PHP=1
             ;;
     esac
     shift
@@ -117,8 +91,12 @@ BUILD_COMMAND=()
 if [ $BUILD_APACHE ]; then
    BUILD_COMMAND+=("./package_apache.sh")
 
-    is_valid_url $APACHE_MOD_MACRO_URL
+    is_valid_url $PCRE_URL
     is_valid_url $APACHE_URL
+    is_valid_url $APACHE_APR_URL
+    is_valid_url $APACHE_APR_UTIL_URL
+    is_valid_url $APACHE_MOD_FCGID_URL
+    is_valid_url $APACHE_MOD_MACRO_URL
 fi
 
 if [ $BUILD_PHP ]; then
@@ -142,7 +120,6 @@ if [ $BUILD_ANT ]; then
     is_valid_url $ANT_URL
 fi
 
-
 if [ ! -z $BUILD_COMMAND ]; then
     if [ "${#BUILD_COMMAND[@]}" = "1" ]; then
         VULCAN_COMMAND=${BUILD_COMMAND[@]}
@@ -159,6 +136,9 @@ mkdir -p $BUILD_DIR
 
 # Copy the variables file
 cp $VARIABLES_FILE $BUILD_DIR/variables.sh
+
+# Copy the utils file
+cp $UTILS_FILE $BUILD_DIR/utils.sh
 
 # Copy the package scripts
 cp $SUPPORT_DIR/package_* $BUILD_DIR/
@@ -245,7 +225,6 @@ for TGZ_FILE in "${TGZ_FILES[@]}"; do
         $MD5SUM_CMD "$TGZ_FILE" >> "$MANIFEST_FILE"
     fi
 done
-more manifest.md5sum
 
 # Sort the manifest file
 cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE > /dev/null

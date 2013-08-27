@@ -2,23 +2,46 @@ Columbo PHP buildpack
 ========================
 
 This is a Heroku buildpack which includes:
-* [Ant](http://ant.apache.org/)
-* [Apache](http://apache.org), including the following modules:
- * deflate, expires, headers, macro, rewrite
-* [Composer](http://getcomposer.org)
-* [New Relic](http://newrelic.com/)
-* [NPM](https://npmjs.org/)
-* [PHP](http://php.net/), including the following notable extensions:
- * apc, curl, mcrypt, memcached, mysql, mysqli, newrelic, pdo, pgsql, phar, soap, zip
+* [Ant][]
+ * A build tool
+* [Apache][]
+ * Current version: 2.4
+ * Includes the following modules:
+  * deflate, expires, fcgid, headers, macro, rewrite, status
+ * Uses [mod_fcgid][] and [php-fpm][] instead of mod_php5, resulting in memory and CPU savings.
+* [Composer][]
+ * Installs dependencies from `composer.json`, if found
+* [New Relic][]
+ * An application performance monitoring tool
+* [NPM][]
+ * Installs dependencies from `package.json`, if found
+* [PHP][]
+ * Current version: 5.4
+ * Includes the following notable extensions:
+  * apc, curl, mcrypt, memcached, mysql, mysqli, newrelic, pdo, pgsql, phar, soap, zip
 
 This build pack should be used along with [taeram/heroku-buildpack-php-columbo-template](https://github.com/taeram/heroku-buildpack-php-columbo-template).
 
+[Ant]: http://ant.apache.org/
+[Apache]: http://apache.org
+[mod_fcgid]: http://httpd.apache.org/mod_fcgid/mod/mod_fcgid.html
+[php-fpm]: http://php-fpm.org/
+[Composer]: http://getcomposer.org
+[New Relic]: http://newrelic.com/
+[NPM]: https://npmjs.org/
+[PHP]: http://php.net/
+[taeram/heroku-buildpack-php-columbo-template]: https://github.com/taeram/heroku-buildpack-php-columbo-template
+
 Requirements
 ============
-* A [Heroku](https://www.heroku.com/) account
-* An [Amazon AWS](http://aws.amazon.com/) account
+* A [Heroku][] account
+* An [Amazon AWS][] account
 * Your Amazon AWS Access Key and Secret Key
-* An [Amazon S3](http://aws.amazon.com/s3/) bucket, for storing the buildpack assets
+* An [Amazon S3][] bucket, for storing the buildpack assets
+
+[Heroku]: https://www.heroku.com/
+[Amazon AWS]: http://aws.amazon.com/
+[Amazon S3]: http://aws.amazon.com/s3/)
 
 Configuring Apache and PHP
 ==========================
