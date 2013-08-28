@@ -20,7 +20,6 @@ ANT_TGZ_FILE="ant-${ANT_VERSION}.tar.gz"
 
 PHP_VERSION="5.4.19"    # http://php.net/downloads.php
 PHP_URL="http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror"
-
 LIBMCRYPT_VERSION="2.5.8"    # http://sourceforge.net/projects/mcrypt/files/Libmcrypt/
 LIBMCRYPT_URL="http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download"
 LIBMEMCACHED_VERSION="1.0.16"    # http://libmemcached.org/libMemcached.html
@@ -28,9 +27,6 @@ LIBMEMCACHED_URL="https://launchpad.net/libmemcached/1.0/${LIBMEMCACHED_VERSION}
 MEMCACHED_VERSION="2.1.0"    # http://pecl.php.net/package/memcached
 MEMCACHED_URL="http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz"
 PHP_TGZ_FILE="php-${PHP_VERSION}.tar.gz"
-
-NEWRELIC_VERSION="3.7.5.7"    # http://download.newrelic.com/php_agent/release/
-NEWRELIC_TGZ_FILE="newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz"
 
 COMPOSER_URL="https://getcomposer.org/installer"
 
