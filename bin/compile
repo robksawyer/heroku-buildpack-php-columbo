@@ -49,11 +49,11 @@ if [ -n "`find . -type f -atime +30`" ]; then
 fi
 
 echo "-----> Fetching Manifest"
-$CURL_CMD "https://$BUILDPACK_S3_BUCKET_URL/$MANIFEST_FILE"
+$CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$MANIFEST_FILE"
 
 if [ ! -f "$APACHE_TGZ_FILE" ] || check_md5 "$APACHE_TGZ_FILE"; then
     echo "-----> Bundling Apache v${APACHE_VERSION}"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET_URL/$APACHE_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$APACHE_TGZ_FILE"
 else
     echo "-----> Using cached Apache v${APACHE_VERSION}"
 fi
@@ -61,7 +61,7 @@ tar xf $APACHE_TGZ_FILE -C $BUILD_DIR
 
 if [ ! -f "$PHP_TGZ_FILE" ] || check_md5 "$PHP_TGZ_FILE"; then
     echo "-----> Bundling PHP version v${PHP_VERSION}"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET_URL/$PHP_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$PHP_TGZ_FILE"
 else
     echo "-----> Using cached PHP v${PHP_VERSION}"
 fi
@@ -77,7 +77,7 @@ export PATH=$PATH:$BUILD_DIR/php/bin
 
 if [ ! -f "$ANT_TGZ_FILE" ] || check_md5 "$ANT_TGZ_FILE"; then
     echo "-----> Bundling Ant version v${ANT_VERSION} "
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET_URL/$ANT_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$ANT_TGZ_FILE"
 else
     echo "-----> Using cached Ant v${ANT_VERSION}"
 fi
@@ -89,7 +89,7 @@ export PATH=$PATH:$BUILD_DIR/ant/bin
 
 if [ ! -f "$NEWRELIC_TGZ_FILE" ] || check_md5 "$NEWRELIC_TGZ_FILE"; then
     echo "-----> Bundling New Relic v${NEWRELIC_VERSION}"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET_URL/$NEWRELIC_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$NEWRELIC_TGZ_FILE"
 else
     echo "-----> Using cached New Relic v${NEWRELIC_VERSION}"
 fi
