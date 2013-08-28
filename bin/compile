@@ -48,6 +48,9 @@ if [ -n "`find . -type f -atime +30`" ]; then
     find . -type f -atime +30 -delete | indent
 fi
 
+echo "-----> TGZs will be downloaded from: $BUILDPACK_S3_BUCKET_URL"
+echo "-----> Using the command: $CURL_CMD"
+
 echo "-----> Fetching Manifest"
 $CURL_CMD "$BUILDPACK_S3_BUCKET_URL/$MANIFEST_FILE"
 
