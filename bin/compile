@@ -123,21 +123,6 @@ if [ -f package.json ]; then
 fi
 popd > /dev/null
 
-# Check if we have Composer dependencies and vendors are not bundled
-# pushd $BUILD_DIR > /dev/null
-# if [ -f www/composer.json ] && [ ! -d www/vendor ]; then
-#     GIT_DIR_ORIG=$GIT_DIR
-#     unset GIT_DIR
-#     echo "-----> Installing Composer dependencies"
-#     cd www
-#     composer install --prefer-source
-#     rm -rf vendor/**/.git
-#     cd $BUILD_DIR
-#     rm www/composer
-#     export GIT_DIR=$GIT_DIR_ORIG
-# fi
-# popd > /dev/null
-
 # Run the rollout script
 pushd $BUILD_DIR > /dev/null
 if [ -f www/rollout.sh ]; then

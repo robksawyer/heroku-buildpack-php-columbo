@@ -8,4 +8,3 @@ default_process_types:
 config_vars:
   PATH: "/app/php/bin:/app/apache/bin:/app/ant/bin:/app/node_modules/.bin:/usr/local/bin:/app/bin:/usr/bin:/bin"
 EOF
-
