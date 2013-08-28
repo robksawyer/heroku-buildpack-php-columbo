@@ -42,7 +42,7 @@ MANIFEST_FILE="manifest.md5sum"
 
 # Detect which md5sum command to use
 MD5SUM_CMD=md5sum
-if [ "$OSTYPE" == "darwin12" ]; then
+if [[ "$OSTYPE" == "darwin"* ]]; then
     MD5SUM_CMD=gmd5sum
 fi
 
