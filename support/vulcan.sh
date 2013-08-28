@@ -47,8 +47,6 @@ BUILD_ANT=
 BUILD_PHP=
 BUILD_NEWRELIC=
 BUILD_IS_VALID=
-BUILD_MD5=
-FETCH_EXISTING_TGZS=
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -58,13 +56,11 @@ while [ $# -gt 0 ]; do
             BUILD_APACHE=1
             BUILD_NEWRELIC=1
             BUILD_PHP=1
-            BUILD_MD5=1
             ;;
 
         ant)
             BUILD_IS_VALID=1
             BUILD_ANT=1
-            BUILD_MD5=1
             ;;
 
         apache)
@@ -75,12 +71,6 @@ while [ $# -gt 0 ]; do
         newrelic)
             BUILD_IS_VALID=1
             BUILD_NEWRELIC=1
-            BUILD_MD5=1
-            ;;
-        md5)
-            BUILD_IS_VALID=1
-            FETCH_EXISTING_TGZS=1
-            BUILD_MD5=1
             ;;
 
         php)
@@ -92,7 +82,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z $BUILD_IS_VALID ]; then
-    echo "No packages specified. Please specify at least one of: all, apache, ant, php, newrelic, or md5"
+    echo "No packages specified. Please specify at least one of: all, apache, ant, php, newrelic"
     exit 1;
 fi
 
@@ -129,11 +119,6 @@ fi
 if [ $BUILD_ANT ]; then
     is_valid_url $ANT_URL
 fi
-
-# if [ $BUILD_IMAGEMAGICK ]; then
-#     #TODO: Fix this
-#     BUILD_COMMAND+=("./package_imagemagick.sh")
-# fi
 
 if [ ! -z $BUILD_COMMAND ]; then
     if [ "${#BUILD_COMMAND[@]}" = "1" ]; then
@@ -204,7 +189,6 @@ if [ ! -z "$VULCAN_COMMAND" ]; then
             echo "New Relic available at: $NEWRELIC_TGZ_FILE"
         fi
     fi
-
 fi
 
 # Grab ant and upload to S3
@@ -240,6 +224,8 @@ for TGZ_FILE in "${TGZ_FILES[@]}"; do
         # Add the new md5
         $MD5SUM_CMD "$TGZ_FILE" >> "$MANIFEST_FILE"
     fi
+done
+
 # Sort the manifest file
 cat $MANIFEST_FILE | sort --key=2 | tee $MANIFEST_FILE > /dev/null
 
