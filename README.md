@@ -98,6 +98,7 @@ s3cmd mb s3://my-bucket-name
 You'll need to tell the buildpack what S3 bucket you're using:
 ```bash
 cat > ./support/config.sh
+BUILDPACK_S3_BUCKET_URL=https://s3-us-west-2.amazonaws.com/my-bucket-name
 BUILDPACK_S3_BUCKET=my-bucket-name
 ```
 

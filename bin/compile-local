@@ -20,25 +20,25 @@ mkdir -p $BUILDPACK_DIR/.local-cache
 cd $BUILDPACK_DIR/.local-cache
 if [ ! -e "$APACHE_TGZ_FILE" ]; then
     echo "Downloading $APACHE_TGZ_FILE"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$APACHE_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET/$APACHE_TGZ_FILE"
 fi
 tar xf $APACHE_TGZ_FILE -C /app
 
 if [ ! -e "$PHP_TGZ_FILE" ]; then
     echo "Downloading $PHP_TGZ_FILE"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$PHP_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET/$PHP_TGZ_FILE"
 fi
 tar xf $PHP_TGZ_FILE -C /app
 
 if [ ! -e "$ANT_TGZ_FILE" ]; then
     echo "Downloading $ANT_TGZ_FILE"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$ANT_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET/$ANT_TGZ_FILE"
 fi
 tar xf $ANT_TGZ_FILE -C /app
 
 if [ ! -e "$NEWRELIC_TGZ_FILE" ]; then
     echo "Downloading $NEWRELIC_TGZ_FILE"
-    $CURL_CMD "https://$BUILDPACK_S3_BUCKET.s3.amazonaws.com/$NEWRELIC_TGZ_FILE"
+    $CURL_CMD "$BUILDPACK_S3_BUCKET/$NEWRELIC_TGZ_FILE"
 fi
 tar xf $NEWRELIC_TGZ_FILE -C /app
 
