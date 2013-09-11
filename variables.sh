@@ -10,7 +10,7 @@ APACHE_MOD_MACRO_VERSION="1.2.1"    # http://people.apache.org/~fabien/mod_macro
 APACHE_MOD_MACRO_URL="http://people.apache.org/~fabien/mod_macro/mod_macro-${APACHE_MOD_MACRO_VERSION}.tar.gz"
 APACHE_TGZ_FILE="apache-${APACHE_VERSION}.tar.gz"
 PCRE_VERSION="8.33"
-PCRE_URL="http://sourceforge.net/projects/pcre/files/pcre/8.33/pcre-${PCRE_VERSION}.tar.gz/download"
+PCRE_URL="http://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz/download"
 
 ANT_VERSION="1.9.2"    # http://ant.apache.org/bindownload.cgi
 ANT_URL="http://apache.sunsite.ualberta.ca/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz"
