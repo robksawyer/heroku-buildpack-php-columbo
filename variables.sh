@@ -19,7 +19,7 @@ ANT_CONTRIB_URL="http://sourceforge.net/projects/ant-contrib/files/ant-contrib/$
 ANT_TGZ_FILE="ant-${ANT_VERSION}.tar.gz"
 
 PHP_VERSION="5.4.19"    # http://php.net/downloads.php
-PHP_URL="http://us3.php.net/get/php-${PHP_VERSION}.tar.gz/from/us3.php.net/mirror"
+PHP_URL="http://us2.php.net/get/php-${PHP_VERSION}.tar.gz/from/us2.php.net/mirror"
 LIBMCRYPT_VERSION="2.5.8"    # http://sourceforge.net/projects/mcrypt/files/Libmcrypt/
 LIBMCRYPT_URL="http://sourceforge.net/projects/mcrypt/files/Libmcrypt/${LIBMCRYPT_VERSION}/libmcrypt-${LIBMCRYPT_VERSION}.tar.bz2/download"
 LIBMEMCACHED_VERSION="1.0.16"    # http://libmemcached.org/libMemcached.html
