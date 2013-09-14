@@ -113,7 +113,7 @@ PHP_EXTENSION_DIR=`/app/php/bin/php-config --extension-dir`
 cd $SCRIPT_DIR
 curl -s -L $NEWRELIC_URL | tar xz
 cd newrelic-php5-${NEWRELIC_VERSION}-linux
-cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}-zts.so ${PHP_EXTENSION_DIR}/newrelic-zts.so
+cp -f agent/x64/newrelic-${ZEND_MODULE_API_VERSION}.so ${PHP_EXTENSION_DIR}/newrelic.so
 
 # Create the empty log files
 cd $SCRIPT_DIR
